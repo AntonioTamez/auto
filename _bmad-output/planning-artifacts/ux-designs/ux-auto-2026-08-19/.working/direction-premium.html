@@ -1,0 +1,326 @@
+<!--
+DIRECCIÓN 2: PREMIUM
+Rationale (ES): Busca la sobriedad elegante de una marca automotriz de lujo: tipografía refinada,
+paleta contenida (negro, crema, acento bronce) y mucho espacio en blanco para que cada vehículo se
+sienta curado, no listado. Se presenta en formato navegador/escritorio porque la decisión de compra
+de un auto premium suele investigarse con calma, no sobre la marcha.
+-->
+<title>Dirección 2 · Premium</title>
+<style>
+/* ============================================================
+   PALETA — Dirección 2: Premium
+   --negro-marca:      #14120F  (headers, texto principal, barra superior)
+   --crema-fondo:      #F7F4EE  (fondo general)
+   --crema-tarjeta:     #FFFFFF (tarjetas)
+   --bronce-acento:    #B08D57  (acentos, precios, líneas de detalle)
+   --gris-linea:       #E4DFD3  (bordes, separadores)
+   --texto-secundario: #706A5C
+   ============================================================ */
+:root{
+  --negro-marca:#14120F;
+  --crema-fondo:#F7F4EE;
+  --crema-tarjeta:#FFFFFF;
+  --bronce-acento:#B08D57;
+  --gris-linea:#E4DFD3;
+  --texto-secundario:#706A5C;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  background:#EFEBE2;
+  color:var(--negro-marca);
+  padding:36px;
+}
+.sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+h1.page-title{font-size:22px;margin:0 0 4px;}
+p.page-sub{color:var(--texto-secundario);margin:0 0 24px;font-size:13.5px;}
+h1.page-title, p.page-sub, .col-label, .notes-panel{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+
+.notes-panel{
+  max-width:960px;
+  background:var(--negro-marca);
+  color:#F0EAD9;
+  border-radius:6px;
+  padding:20px 24px;
+  margin-bottom:32px;
+  font-size:13.5px;
+  line-height:1.6;
+}
+.notes-panel b{color:var(--bronce-acento);}
+
+.stage{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;}
+.col-label{font-size:11px;font-weight:600;color:var(--texto-secundario);margin:0 0 12px;text-transform:uppercase;letter-spacing:.12em;}
+
+/* --- Browser frame --- */
+.browser{
+  width:620px;
+  background:var(--crema-fondo);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 24px 60px rgba(20,18,15,.18);
+  flex-shrink:0;
+}
+.browser-bar{
+  background:var(--negro-marca);
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.dot{width:9px;height:9px;border-radius:50%;background:#4A463D;}
+.browser-url{
+  margin-left:12px;
+  background:#26231D;
+  color:#B5AE9C;
+  font-size:11px;
+  padding:5px 12px;
+  border-radius:4px;
+  flex:1;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+
+.hero-head{
+  padding:38px 44px 20px;
+  border-bottom:1px solid var(--gris-linea);
+}
+.hero-head .eyebrow{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bronce-acento);
+  margin:0 0 10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;
+}
+.hero-head h2{font-size:30px;font-weight:400;margin:0 0 6px;letter-spacing:.01em;}
+.hero-head p{margin:0;color:var(--texto-secundario);font-size:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+
+.filters{
+  display:flex;gap:0;flex-wrap:wrap;
+  padding:18px 44px;
+  border-bottom:1px solid var(--gris-linea);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.chip{
+  color:var(--texto-secundario);
+  font-size:11.5px;
+  padding:6px 16px 6px 0;
+  margin-right:16px;
+  border-right:1px solid var(--gris-linea);
+  letter-spacing:.02em;
+}
+.chip:last-child{border-right:none;}
+.chip.active{color:var(--negro-marca);font-weight:700;}
+
+.cards{padding:8px 44px 34px;display:flex;flex-direction:column;}
+.card{
+  padding:26px 0;
+  border-bottom:1px solid var(--gris-linea);
+  display:flex;justify-content:space-between;gap:20px;
+}
+.card:last-child{border-bottom:none;}
+.card-left{flex:1;}
+.card-name{font-size:18px;margin:0 0 4px;font-weight:400;}
+.card-agency{
+  font-size:12px;color:var(--texto-secundario);margin:0 0 12px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.badges{display:flex;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.badge{
+  font-size:10.5px;color:var(--negro-marca);
+  border:1px solid var(--gris-linea);
+  padding:4px 10px;border-radius:2px;letter-spacing:.03em;
+}
+.card-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;}
+.card-price{font-size:19px;color:var(--bronce-acento);margin:0 0 14px;white-space:nowrap;}
+.card-price small{display:block;font-size:10.5px;color:var(--texto-secundario);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.cmp-btn{
+  border:1px solid var(--negro-marca);background:none;color:var(--negro-marca);
+  font-size:11px;padding:9px 16px;border-radius:2px;letter-spacing:.04em;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.cmp-btn.on{background:var(--negro-marca);color:#fff;}
+
+.compare-footer{
+  background:var(--negro-marca);color:#F0EAD9;
+  padding:16px 44px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.compare-footer b{font-weight:600;font-size:13.5px;}
+.compare-footer span{font-size:11px;color:#B5AE9C;display:block;margin-top:2px;}
+.go-btn{
+  background:var(--bronce-acento);color:var(--negro-marca);border:none;
+  font-weight:700;font-size:11.5px;padding:10px 18px;border-radius:2px;letter-spacing:.03em;
+}
+
+/* --- secondary: comparison --- */
+table.cmp{width:100%;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+table.cmp th{
+  text-align:left;padding:16px 20px;font-size:12.5px;font-weight:600;
+  border-bottom:2px solid var(--negro-marca);vertical-align:bottom;
+}
+table.cmp th .veh-name{display:block;font-family:Georgia,serif;font-size:15px;font-weight:400;}
+table.cmp th .veh-agency{color:var(--texto-secundario);font-size:10.5px;font-weight:400;}
+table.cmp td{
+  padding:14px 20px;font-size:12px;border-bottom:1px solid var(--gris-linea);
+}
+table.cmp tr td:first-child{color:var(--texto-secundario);font-size:11px;letter-spacing:.03em;text-transform:uppercase;width:130px;}
+
+/* --- Empty state --- */
+.empty-panel{
+  width:620px;background:var(--crema-fondo);border-radius:10px;
+  padding:70px 60px;text-align:center;box-shadow:0 24px 60px rgba(20,18,15,.12);
+  flex-shrink:0;
+}
+.empty-panel .rule{width:40px;height:1px;background:var(--bronce-acento);margin:0 auto 20px;}
+.empty-panel h3{font-size:21px;font-weight:400;margin:0 0 12px;}
+.empty-panel p{
+  margin:0 0 26px;font-size:13.5px;color:var(--texto-secundario);line-height:1.7;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  max-width:380px;margin-left:auto;margin-right:auto;
+}
+.empty-panel button{
+  background:none;border:1px solid var(--negro-marca);color:var(--negro-marca);
+  font-size:11.5px;padding:11px 24px;border-radius:2px;letter-spacing:.04em;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+</style>
+
+<h1 class="page-title">Dirección 2 — Premium</h1>
+<p class="page-sub">Pantalla principal (resultados), tabla comparativa y estado vacío, en formato navegador/escritorio.</p>
+
+<div class="notes-panel">
+  <b>Notas de diseño:</b> tipografía serif para jerarquía editorial, negro + crema + acento bronce
+  (#B08D57), separadores finos en vez de tarjetas con sombra, mucho aire entre elementos. El registro
+  de marca busca sensación aspiracional, similar a un configurador de auto de lujo.
+</div>
+
+<div class="stage">
+
+  <!-- HERO -->
+  <div>
+    <p class="col-label">Pantalla principal</p>
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="browser-url">proyectoauto.mx/resultados?ciudad=monterrey</div>
+      </div>
+      <div class="hero-head">
+        <p class="eyebrow">Resultados en Monterrey</p>
+        <h2>Vehículos disponibles</h2>
+        <p>Curamos las mejores opciones de las agencias de tu ciudad.</p>
+      </div>
+      <div class="filters">
+        <span class="chip active">Ciudad: Monterrey</span>
+        <span class="chip">Año</span>
+        <span class="chip">Precio</span>
+        <span class="chip">Carrocería</span>
+        <span class="chip">Transmisión</span>
+        <span class="chip">Equipamiento</span>
+        <span class="chip">Color</span>
+        <span class="chip">Disponibilidad estimada</span>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="card-left">
+            <p class="card-name">Nissan Versa Advance 2025</p>
+            <p class="card-agency">Nissan Cumbres</p>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Aire acondicionado</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <p class="card-price">$389,000<small>MXN aprox.</small></p>
+            <button class="cmp-btn on">En comparación ✓</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-left">
+            <p class="card-name">Volkswagen Virtus Comfortline 2025</p>
+            <p class="card-agency">VW San Jerónimo</p>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Sensores de reversa</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <p class="card-price">$412,000<small>MXN aprox.</small></p>
+            <button class="cmp-btn on">En comparación ✓</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-left">
+            <p class="card-name">Kia Rio LX 2025</p>
+            <p class="card-agency">Kia Valle Oriente</p>
+            <div class="badges">
+              <span class="badge">Techo corredizo</span>
+              <span class="badge">Pantalla táctil</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <p class="card-price">$359,500<small>MXN aprox.</small></p>
+            <button class="cmp-btn">Agregar a comparar</button>
+          </div>
+        </div>
+      </div>
+      <div class="compare-footer">
+        <div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div>
+        <button class="go-btn">Comparar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECUNDARIA -->
+  <div>
+    <p class="col-label">Pantalla secundaria — comparar</p>
+    <div class="browser" style="width:560px;">
+      <div class="browser-bar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="browser-url">proyectoauto.mx/comparar</div>
+      </div>
+      <div class="hero-head" style="padding:30px 34px 16px;">
+        <p class="eyebrow">Comparación</p>
+        <h2 style="font-size:24px;">2 vehículos, lado a lado</h2>
+      </div>
+      <table class="cmp">
+        <tr>
+          <td style="padding-left:34px;"></td>
+          <th><span class="veh-name">Nissan Versa Advance</span><span class="veh-agency">Nissan Cumbres</span></th>
+          <th style="padding-right:34px;"><span class="veh-name">VW Virtus Comfortline</span><span class="veh-agency">VW San Jerónimo</span></th>
+        </tr>
+        <tr>
+          <td style="padding-left:34px;">Precio y año</td>
+          <td>$389,000 · 2025</td>
+          <td style="padding-right:34px;">$412,000 · 2025</td>
+        </tr>
+        <tr>
+          <td style="padding-left:34px;">Carrocería</td>
+          <td>Sedán</td>
+          <td style="padding-right:34px;">Sedán</td>
+        </tr>
+        <tr>
+          <td style="padding-left:34px;">Transmisión y motor</td>
+          <td>Automática · 1.6L</td>
+          <td style="padding-right:34px;">Automática · 1.6L Turbo</td>
+        </tr>
+        <tr>
+          <td style="padding-left:34px;">Equipamiento</td>
+          <td>Advance · A/C, cámara</td>
+          <td style="padding-right:34px;">Comfortline · Sensores, techo</td>
+        </tr>
+      </table>
+      <div style="height:26px;"></div>
+    </div>
+  </div>
+
+  <!-- ESTADO: vacío -->
+  <div>
+    <p class="col-label">Estado — sin resultados</p>
+    <div class="empty-panel">
+      <div class="rule"></div>
+      <h3>Aún no hay coincidencias</h3>
+      <p>No encontramos vehículos que cumplan con todos los filtros seleccionados en Monterrey.
+      Ajusta el rango de precio o el año para ver más opciones.</p>
+      <button>Ajustar filtros</button>
+    </div>
+  </div>
+
+</div>

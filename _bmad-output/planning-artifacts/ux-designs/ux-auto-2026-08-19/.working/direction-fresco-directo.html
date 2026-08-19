@@ -1,0 +1,395 @@
+<!--
+DIRECCIÓN 1: FRESCO Y DIRECTO
+Rationale (ES): Inspirada en la energía cotidiana de apps como Rappi: color saturado, formas
+redondeadas grandes y microcopy directo y amigable para que comprar un carro se sienta tan fácil
+como pedir comida. Prioriza contraste alto y botones grandes para uso rápido con el pulgar en la
+calle o en la agencia, reforzando una identidad mexicana cercana y sin pretensiones.
+-->
+<title>Dirección 1 · Fresco y Directo</title>
+<style>
+/* ============================================================
+   PALETA — Dirección 1: Fresco y Directo
+   --naranja-primario:   #FF4B12  (CTAs, precios, acentos fuertes)
+   --naranja-suave:      #FFE8DC  (fondos de chip / badge)
+   --morado-acento:      #7B2FF7  (acento secundario, disponibilidad)
+   --verde-exito:        #00C853  (confirmaciones, "seleccionados")
+   --amarillo-alerta:    #FFC531  (badges de equipamiento)
+   --fondo-app:          #FFF8F0  (fondo general cálido)
+   --tarjeta-bg:         #FFFFFF
+   --texto-principal:    #201510
+   --texto-secundario:   #7A6F68
+   --borde-suave:        #FFDAC4
+   ============================================================ */
+:root{
+  --naranja-primario:#FF4B12;
+  --naranja-suave:#FFE8DC;
+  --morado-acento:#7B2FF7;
+  --verde-exito:#00C853;
+  --amarillo-alerta:#FFC531;
+  --fondo-app:#FFF8F0;
+  --tarjeta-bg:#FFFFFF;
+  --texto-principal:#201510;
+  --texto-secundario:#7A6F68;
+  --borde-suave:#FFDAC4;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:#F1EAE3;
+  color:var(--texto-principal);
+  padding:32px;
+}
+h1.page-title{font-size:22px;margin:0 0 4px;}
+p.page-sub{color:var(--texto-secundario);margin:0 0 24px;font-size:14px;}
+
+.notes-panel{
+  max-width:900px;
+  background:#2B1608;
+  color:#FFE8DC;
+  border-radius:20px;
+  padding:18px 22px;
+  margin-bottom:32px;
+  font-size:13.5px;
+  line-height:1.55;
+}
+.notes-panel b{color:#FFC531;}
+
+.stage{
+  display:flex;
+  flex-wrap:wrap;
+  gap:40px;
+  align-items:flex-start;
+}
+
+/* --- Phone frame --- */
+.phone{
+  width:340px;
+  height:700px;
+  background:#111;
+  border-radius:46px;
+  padding:14px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+  flex-shrink:0;
+}
+.screen{
+  width:100%;
+  height:100%;
+  background:var(--fondo-app);
+  border-radius:34px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+.notch{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:110px;height:22px;background:#111;border-radius:14px;z-index:5;
+}
+.status{height:40px;flex-shrink:0;}
+
+.topbar{
+  background:var(--naranja-primario);
+  padding:34px 18px 20px;
+  border-radius:0 0 28px 28px;
+  color:#fff;
+}
+.topbar h2{margin:0 0 2px;font-size:20px;font-weight:800;}
+.topbar p{margin:0;font-size:12.5px;opacity:.9;}
+
+.filters{
+  display:flex;
+  gap:8px;
+  padding:14px 16px 4px;
+  overflow-x:auto;
+}
+.chip{
+  background:var(--naranja-suave);
+  color:var(--naranja-primario);
+  border:none;
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.chip.active{background:var(--naranja-primario);color:#fff;}
+
+.cards{
+  flex:1;
+  overflow-y:auto;
+  padding:12px 16px 90px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.card{
+  background:var(--tarjeta-bg);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:0 6px 18px rgba(255,75,18,.08);
+  border:2px solid transparent;
+}
+.card.selected{border-color:var(--verde-exito);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card-name{font-size:15px;font-weight:800;margin:0 0 2px;}
+.card-agency{font-size:12px;color:var(--texto-secundario);margin:0 0 8px;}
+.card-price{font-size:17px;font-weight:900;color:var(--naranja-primario);white-space:nowrap;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px;}
+.badge{
+  background:var(--amarillo-alerta);
+  color:#3E2A00;
+  font-size:10.5px;
+  font-weight:800;
+  padding:4px 10px;
+  border-radius:999px;
+}
+.card-actions{display:flex;justify-content:flex-end;}
+.cmp-btn{
+  border:none;
+  background:var(--fondo-app);
+  color:var(--naranja-primario);
+  font-weight:800;
+  font-size:12.5px;
+  padding:10px 16px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.cmp-btn.on{background:var(--verde-exito);color:#fff;}
+
+.compare-bar{
+  position:absolute;
+  bottom:16px;left:16px;right:16px;
+  background:var(--morado-acento);
+  color:#fff;
+  border-radius:20px;
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 10px 24px rgba(123,47,247,.35);
+}
+.compare-bar b{font-size:14px;}
+.compare-bar span{font-size:11.5px;opacity:.85;display:block;}
+.go-btn{
+  background:#fff;color:var(--morado-acento);
+  border:none;font-weight:900;font-size:12.5px;
+  padding:10px 16px;border-radius:14px;
+}
+
+/* --- Secondary screen: comparison table --- */
+.compare-screen .topbar{background:var(--morado-acento);}
+.table-wrap{padding:14px 14px 90px;overflow:auto;}
+table.cmp{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:11px;}
+table.cmp th{
+  background:#fff;
+  padding:10px 8px;
+  border-radius:14px 14px 0 0;
+  font-size:11px;
+  text-align:left;
+}
+table.cmp th .veh-name{display:block;font-weight:800;color:var(--naranja-primario);font-size:11.5px;}
+table.cmp th .veh-agency{font-weight:500;color:var(--texto-secundario);font-size:9.5px;}
+table.cmp td{
+  background:#fff;
+  padding:9px 8px;
+  font-size:10.5px;
+  border-top:1px solid var(--borde-suave);
+}
+table.cmp tr td:first-child{
+  font-weight:800;color:var(--texto-secundario);width:70px;background:var(--naranja-suave);
+  border-radius:12px 0 0 12px;
+}
+table.cmp tr td:last-child{border-radius:0 12px 12px 0;}
+
+/* --- Empty state --- */
+.empty-panel{
+  width:340px;
+  background:#fff;
+  border-radius:28px;
+  padding:36px 26px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  flex-shrink:0;
+}
+.empty-panel .emoji{font-size:44px;margin-bottom:10px;}
+.empty-panel h3{margin:0 0 8px;font-size:17px;}
+.empty-panel p{margin:0 0 18px;font-size:13px;color:var(--texto-secundario);line-height:1.5;}
+.empty-panel button{
+  background:var(--naranja-primario);color:#fff;border:none;
+  font-weight:800;font-size:13px;padding:12px 20px;border-radius:16px;
+}
+.col-label{font-size:12px;font-weight:800;color:var(--texto-secundario);margin:0 0 12px;text-transform:uppercase;letter-spacing:.04em;}
+</style>
+
+<h1 class="page-title">Dirección 1 — Fresco y Directo</h1>
+<p class="page-sub">Pantalla principal (resultados), tabla comparativa y estado vacío de búsqueda.</p>
+
+<div class="notes-panel">
+  <b>Notas de diseño:</b> paleta saturada (naranja #FF4B12 + morado #7B2FF7), tarjetas muy redondeadas,
+  microcopy corto y directo ("2 seleccionados — Comparar"), botón flotante de comparación tipo carrito.
+  Pensada para reconocimiento instantáneo y uso con una mano.
+</div>
+
+<div class="stage">
+
+  <!-- HERO: resultados -->
+  <div>
+    <p class="col-label">Pantalla principal</p>
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status"></div>
+        <div class="topbar">
+          <h2>Carros en Monterrey 🚗</h2>
+          <p>Filtra, compara y llega decidido a la agencia</p>
+        </div>
+        <div class="filters">
+          <span class="chip active">Monterrey ✕</span>
+          <span class="chip">Año</span>
+          <span class="chip">Precio</span>
+          <span class="chip">Carrocería</span>
+          <span class="chip">Transmisión</span>
+          <span class="chip">Equipamiento</span>
+          <span class="chip">Color</span>
+          <span class="chip">Disponibilidad</span>
+        </div>
+        <div class="cards">
+          <div class="card selected">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Nissan Versa Advance 2025</p>
+                <p class="card-agency">Nissan Cumbres</p>
+              </div>
+              <p class="card-price">$389,000<br>MXN aprox.</p>
+            </div>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Aire acondicionado</span>
+            </div>
+            <div class="card-actions">
+              <button class="cmp-btn on">✓ En tu comparación</button>
+            </div>
+          </div>
+
+          <div class="card selected">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Volkswagen Virtus Comfortline 2025</p>
+                <p class="card-agency">VW San Jerónimo</p>
+              </div>
+              <p class="card-price">$412,000<br>MXN aprox.</p>
+            </div>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Sensores de reversa</span>
+            </div>
+            <div class="card-actions">
+              <button class="cmp-btn on">✓ En tu comparación</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Kia Rio LX 2025</p>
+                <p class="card-agency">Kia Valle Oriente</p>
+              </div>
+              <p class="card-price">$359,500<br>MXN aprox.</p>
+            </div>
+            <div class="badges">
+              <span class="badge">Techo corredizo</span>
+              <span class="badge">Pantalla táctil</span>
+            </div>
+            <div class="card-actions">
+              <button class="cmp-btn">+ Agregar a comparar</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Chevrolet Aveo Premier 2025</p>
+                <p class="card-agency">Chevrolet Contry</p>
+              </div>
+              <p class="card-price">$329,900<br>MXN aprox.</p>
+            </div>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Bolsas de aire x6</span>
+            </div>
+            <div class="card-actions">
+              <button class="cmp-btn">+ Agregar a comparar</button>
+            </div>
+          </div>
+        </div>
+        <div class="compare-bar">
+          <div>
+            <b>2 seleccionados</b>
+            <span>Nissan Versa · VW Virtus</span>
+          </div>
+          <button class="go-btn">Comparar →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECUNDARIA: tabla comparativa -->
+  <div>
+    <p class="col-label">Pantalla secundaria — comparar</p>
+    <div class="phone">
+      <div class="screen compare-screen">
+        <div class="notch"></div>
+        <div class="status"></div>
+        <div class="topbar">
+          <h2>Comparar autos</h2>
+          <p>2 vehículos seleccionados</p>
+        </div>
+        <div class="table-wrap">
+          <table class="cmp">
+            <tr>
+              <td></td>
+              <th><span class="veh-name">Nissan Versa Advance</span><span class="veh-agency">Nissan Cumbres</span></th>
+              <th><span class="veh-name">VW Virtus Comfortline</span><span class="veh-agency">VW San Jerónimo</span></th>
+            </tr>
+            <tr>
+              <td>Precio y año</td>
+              <td>$389,000 · 2025</td>
+              <td>$412,000 · 2025</td>
+            </tr>
+            <tr>
+              <td>Carrocería</td>
+              <td>Sedán</td>
+              <td>Sedán</td>
+            </tr>
+            <tr>
+              <td>Transmisión<br>y motor</td>
+              <td>Automática · 1.6L</td>
+              <td>Automática · 1.6L Turbo</td>
+            </tr>
+            <tr>
+              <td>Equipamiento</td>
+              <td>Advance · A/C, cámara</td>
+              <td>Comfortline · Sensores, techo</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO: vacío -->
+  <div>
+    <p class="col-label">Estado — sin resultados</p>
+    <div class="empty-panel">
+      <div class="emoji">🔍🚘</div>
+      <h3>Sin resultados con esos filtros</h3>
+      <p>No encontramos autos en Monterrey con "Automático + Techo corredizo + menos de $300,000".
+      Prueba quitando un filtro.</p>
+      <button>Quitar filtro de precio</button>
+    </div>
+  </div>
+
+</div>
