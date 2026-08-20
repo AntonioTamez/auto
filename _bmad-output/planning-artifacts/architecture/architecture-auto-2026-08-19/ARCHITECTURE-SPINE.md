@@ -178,6 +178,7 @@ flowchart LR
 | Azure Blob Storage | — |
 | GitHub Actions | CI/CD — private repo, Free plan (2,000 Linux minutes/month, verified 2026) |
 | Terraform | `azurerm` provider — IaC for all Azure resources (AD-18) |
+| Azure Application Insights | Basic availability/latency/error monitoring bound to NFR-4, provisioned via Terraform (Epic 1, Story 1.8) |
 
 ## Structural Seed
 
@@ -266,7 +267,7 @@ Angular and Flutter source trees are not fixed here — their internal structure
 - **Exact PostgreSQL schema & migrations** — field-by-field detail is a code concern; only load-bearing invariants (AD-6, AD-8, AD-9, AD-10) are fixed here.
 - **Flutter's CI/CD pipeline specifics** — AD-17 fixes that CI/CD exists from the first endpoint for the .NET API and Angular web; the mobile app-store release pipeline (build signing, TestFlight/Play internal track automation) is not designed here.
 - **Dev-database seed/fixture data** — a freshly `terraform apply`'d dev resource group starts with an empty Postgres. How dev gets sample agencies/brands/vehicles (a seed script, a snapshot restore, or manual entry) is not decided here — whatever mechanism is chosen must still respect AD-13 (`AGENCY_BRAND` is derived, never independently seeded/written).
-- **Observability/monitoring stack** — no APM/logging backend chosen yet (e.g. Application Insights); NFR-4's 99% uptime target has no monitoring implementation bound to it yet.
+- **Observability/monitoring depth beyond the basics** — Azure Application Insights now provides basic availability/latency/error monitoring bound to NFR-4 (see Stack, Epic 1 Story 1.8); alert thresholds, dashboards, log retention policy, and any deeper APM tracing are not designed here.
 - **Rate limiting specifics** — no thresholds or middleware chosen for the public share endpoint or OTP request endpoint.
 - **Exact Azure region** — cost estimate and topology are region-agnostic; region selection (proximity to Monterrey, data residency) not made here.
 - **SMS OTP channel — future phase, requires a different provider** — OTP is email-only in the MVP (AD-4). Azure Communication Services cannot deliver SMS to Mexico numbers at all (a hard capability gap, not a pricing question); adding SMS later means integrating a different provider (e.g. Twilio, which does support Mexico), not a config change to ACS.

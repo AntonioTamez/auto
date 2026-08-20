@@ -1,0 +1,93 @@
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when its first story starts (via build's sprint sync)
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates the next story after the previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; the status view surfaces open ones
+generated: 08-19-2026 23:09
+last_updated: 08-19-2026 23:09
+project: Proyecto Auto
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+development_status:
+  epic-1: backlog
+  1-1-esqueleto-del-repositorio-clean-architecture-angular: backlog
+  1-2-infraestructura-azure-definida-en-terraform: backlog
+  1-3-ci-build-y-test-en-cada-push-pr: backlog
+  1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev: backlog
+  1-5-endpoint-de-health-check-verificable-de-punta-a-punta: backlog
+  1-6-destruir-el-ambiente-de-dev-bajo-demanda: backlog
+  1-7-publicar-el-contrato-openapi: backlog
+  1-8-monitoreo-básico-de-disponibilidad: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-alta-de-agencia: backlog
+  2-2-editar-datos-de-una-agencia: backlog
+  2-3-alta-de-vehículo-con-marca: backlog
+  2-4-editar-vehículo: backlog
+  2-5-desactivar-vehículo-retirar-del-catálogo: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-tokens-de-marca-en-angular: backlog
+  3-2-ubicar-agencias-y-ver-sus-marcas: backlog
+  3-3-listar-vehículos-por-agencia: backlog
+  3-4-filtrar-por-año-y-precio: backlog
+  3-5-filtrar-por-carrocería-transmisión-motor-y-equipamiento: backlog
+  3-6-filtrar-por-color-disponibilidad-y-panel-todos-los-filtros: backlog
+  3-7-detalle-de-vehículo: backlog
+  3-8-perfil-de-agencia: backlog
+  3-9-estado-sin-resultados: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-agregar-quitar-un-vehículo-de-la-comparación: backlog
+  4-2-barra-de-comparación-con-conteo: backlog
+  4-3-tope-de-3-vehículos-con-bloqueo-explícito: backlog
+  4-4-ver-tabla-comparativa-escritorio: backlog
+  4-5-ver-comparación-en-móvil-tarjetas-apiladas: backlog
+  4-6-quitar-un-vehículo-desde-la-comparación: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-crear-cuenta-con-email: backlog
+  5-2-iniciar-sesión-con-email: backlog
+  5-3-guardar-una-comparación-cuenta-al-vuelo: backlog
+  5-4-ver-mis-comparaciones-guardadas: backlog
+  5-5-compartir-una-comparación: backlog
+  5-6-ver-una-comparación-compartida-sin-cuenta: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-esqueleto-flutter-con-tokens-de-marca: backlog
+  6-2-descubrimiento-en-móvil: backlog
+  6-3-comparación-en-móvil: backlog
+  6-4-cuenta-guardar-y-compartir-en-móvil: backlog
+  6-5-verificación-de-paridad-funcional-cruzada: backlog
+  epic-6-retrospective: optional
