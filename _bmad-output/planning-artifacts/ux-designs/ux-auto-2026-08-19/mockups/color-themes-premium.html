@@ -1,0 +1,535 @@
+<!--
+COLOR THEMES RENDERER — Dirección Premium (variaciones de paleta)
+Contexto: la dirección "Premium" (tipografía serif editorial, mucho whitespace, tarjetas con
+separadores finos, botones de línea) quedó confirmada en layout/tipografía/densidad/personalidad.
+Lo único que se explora aquí son 5 paletas de color alternativas dentro del registro premium/
+aspiracional — sin acercarse al registro juguetón (Rappi) ni al sobrio/fintech, ya descartados.
+Cada variación conserva EXACTAMENTE la estructura, tipografía y espaciado de direction-premium.html;
+solo cambian los tokens de color. Se muestra modo claro y modo oscuro de cada paleta.
+-->
+<title>Color Themes · Dirección Premium</title>
+<style>
+/* ============================================================
+   VARIACIÓN 1 — Lujo cálido
+   Claro:  fondo #F5F1E7 · superficie #FFFFFF · texto #1B160F · texto2 #6B6152
+           borde #E3DAC5 · acento #A9793D (tinta acento #1B160F) · éxito #4C7A54
+   Oscuro: fondo #15110B · superficie #201A11 · texto #F3EBDA · texto2 #A89877
+           borde #35291A · acento #CFA05C (tinta acento #15110B) · éxito #6EA57C
+   ------------------------------------------------------------
+   VARIACIÓN 2 — Lujo frío / tech
+   Claro:  fondo #F1F4F6 · superficie #FFFFFF · texto #12181F · texto2 #5A6570
+           borde #DAE2E8 · acento #3E5872 (tinta acento #FFFFFF) · éxito #3D7F63
+   Oscuro: fondo #0A0F16 · superficie #121B26 · texto #E7EDF3 · texto2 #8B97A5
+           borde #22303F · acento #A9BCCB (tinta acento #0A0F16) · éxito #5CA989
+   ------------------------------------------------------------
+   VARIACIÓN 3 — Tono joya (esmeralda)
+   Claro:  fondo #EFF4F0 · superficie #FFFFFF · texto #10241C · texto2 #58685E
+           borde #D6E3DA · acento #8E7A52 (tinta acento #10241C) · éxito #2F7A55
+   Oscuro: fondo #0A1D16 · superficie #12281E · texto #E9F2ED · texto2 #8FA79C
+           borde #1E4433 · acento #C9B992 (tinta acento #0A1D16) · éxito #4FAE7C
+   ------------------------------------------------------------
+   VARIACIÓN 4 — Monocromático + acento
+   Claro:  fondo #F4F4F3 · superficie #FFFFFF · texto #191917 · texto2 #6B6B67
+           borde #DDDDDA · acento #9C3B2E (tinta acento #FFFFFF) · éxito #4B7A5B
+   Oscuro: fondo #131312 · superficie #1D1D1B · texto #F1F1EE · texto2 #9A9A94
+           borde #333330 · acento #C24E3C (tinta acento #FFFFFF) · éxito #5E9A73
+   ------------------------------------------------------------
+   VARIACIÓN 5 — Editorial claro
+   Claro:  fondo #F7F4EC · superficie #FFFFFF · texto #201B14 · texto2 #6D6252
+           borde #E4DCC8 · acento #23262E (tinta acento #F7F4EC) · éxito #3E7A54
+   Oscuro: fondo #16140F · superficie #1F1C16 · texto #F1ECDF · texto2 #A69A82
+           borde #34301F · acento #D9D2BF (tinta acento #16140F) · éxito #6B9C7C
+   ============================================================ */
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:Georgia,'Times New Roman',serif;
+  background:#EDEAE2;
+  color:#14120F;
+  padding:40px 40px 80px;
+}
+.sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+
+.page-title{font-size:23px;margin:0 0 6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.page-sub{color:#6E6252;margin:0 0 36px;font-size:13.5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;max-width:760px;line-height:1.6;}
+
+.variation{margin-bottom:56px;}
+.variation-head{margin-bottom:18px;}
+.variation-head .vnum{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#A9793D;
+  margin:0 0 6px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.variation-head h2{font-size:21px;font-weight:400;margin:0 0 4px;}
+.variation-head p{margin:0;color:#6E6252;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+
+.modes{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+.mode-col{flex:1;min-width:380px;max-width:460px;}
+.mode-label{
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8A8172;
+  margin:0 0 10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+
+/* --- token chips --- */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.tchip{
+  display:flex;align-items:center;gap:6px;
+  border:1px solid rgba(0,0,0,.12);
+  border-radius:3px;padding:4px 8px 4px 6px;
+  font-size:10px;letter-spacing:.01em;background:#fff;
+}
+.tchip .sw{width:12px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.15);flex-shrink:0;}
+.tchip b{font-weight:600;}
+.tchip .hex{opacity:.65;font-variant-numeric:tabular-nums;}
+
+/* --- demo browser panel (mirrors direction-premium.html structure) --- */
+.demo-browser{
+  border-radius:10px;overflow:hidden;background:var(--bg);
+  box-shadow:0 18px 44px rgba(0,0,0,.22);
+}
+.demo-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 16px;display:flex;align-items:center;gap:7px;
+}
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.demo-url{
+  margin-left:10px;background:var(--bg);color:var(--text2);
+  font-size:10.5px;padding:5px 12px;border-radius:4px;flex:1;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.demo-head{padding:26px 28px 16px;border-bottom:1px solid var(--border);}
+.demo-head .eyebrow{
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+  margin:0 0 8px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.demo-head h2{font-size:23px;font-weight:400;margin:0;color:var(--text);letter-spacing:.01em;}
+
+.demo-card{padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;}
+.demo-card-name{font-size:16px;margin:0 0 4px;font-weight:400;color:var(--text);}
+.demo-card-agency{
+  font-size:11.5px;color:var(--text2);margin:0 0 11px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.demo-badges{display:flex;gap:8px;flex-wrap:wrap;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.demo-badge{
+  font-size:10px;color:var(--text);border:1px solid var(--border);
+  padding:4px 9px;border-radius:2px;letter-spacing:.03em;
+}
+.demo-badge.pos{color:var(--success);border-color:var(--success);}
+.demo-card-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0;}
+.demo-price{font-size:17px;color:var(--accent);margin:0 0 12px;white-space:nowrap;}
+.demo-price small{display:block;font-size:10px;color:var(--text2);font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+.demo-btn{
+  border:1px solid var(--text);background:none;color:var(--text);
+  font-size:10.5px;padding:8px 14px;border-radius:2px;letter-spacing:.04em;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.demo-footer{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:14px 28px;display:flex;justify-content:space-between;align-items:center;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+.demo-footer b{font-weight:600;font-size:12.5px;color:var(--text);}
+.demo-footer span{font-size:10.5px;color:var(--text2);display:block;margin-top:2px;}
+.demo-go{
+  background:var(--accent);color:var(--accent-ink);border:none;
+  font-weight:700;font-size:11px;padding:9px 16px;border-radius:2px;letter-spacing:.03em;
+}
+</style>
+
+<h1 class="page-title">Color Themes Renderer — Dirección Premium</h1>
+<p class="page-sub">
+  5 paletas alternativas dentro del registro Premium confirmado (tipografía, layout, densidad y
+  componentes sin cambios — solo varían los tokens de color). Cada variación se muestra en modo
+  claro y modo oscuro con el mismo fragmento de UI: tarjeta de resultado de vehículo.
+</p>
+
+<!-- ============================================================ VARIACIÓN 1 ============================================================ -->
+<div class="variation">
+  <div class="variation-head">
+    <p class="vnum">Variación 1</p>
+    <h2>Lujo cálido</h2>
+    <p>Cuero, bronce y crema — la calidez aspiracional de un showroom clásico, refinada respecto a la paleta actual.</p>
+  </div>
+  <div class="modes">
+
+    <div class="mode-col">
+      <p class="mode-label">Modo claro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#F5F1E7"></span><b>Fondo</b><span class="hex">#F5F1E7</span></span>
+        <span class="tchip"><span class="sw" style="background:#FFFFFF"></span><b>Superficie</b><span class="hex">#FFFFFF</span></span>
+        <span class="tchip"><span class="sw" style="background:#1B160F"></span><b>Texto</b><span class="hex">#1B160F</span></span>
+        <span class="tchip"><span class="sw" style="background:#6B6152"></span><b>Texto 2</b><span class="hex">#6B6152</span></span>
+        <span class="tchip"><span class="sw" style="background:#E3DAC5"></span><b>Borde</b><span class="hex">#E3DAC5</span></span>
+        <span class="tchip"><span class="sw" style="background:#A9793D"></span><b>Acento</b><span class="hex">#A9793D</span></span>
+        <span class="tchip"><span class="sw" style="background:#4C7A54"></span><b>Éxito</b><span class="hex">#4C7A54</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#F5F1E7;--surface:#FFFFFF;--text:#1B160F;--text2:#6B6152;--border:#E3DAC5;--accent:#A9793D;--accent-ink:#1B160F;--success:#4C7A54;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+    <div class="mode-col">
+      <p class="mode-label">Modo oscuro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#15110B"></span><b>Fondo</b><span class="hex">#15110B</span></span>
+        <span class="tchip"><span class="sw" style="background:#201A11"></span><b>Superficie</b><span class="hex">#201A11</span></span>
+        <span class="tchip"><span class="sw" style="background:#F3EBDA"></span><b>Texto</b><span class="hex">#F3EBDA</span></span>
+        <span class="tchip"><span class="sw" style="background:#A89877"></span><b>Texto 2</b><span class="hex">#A89877</span></span>
+        <span class="tchip"><span class="sw" style="background:#35291A"></span><b>Borde</b><span class="hex">#35291A</span></span>
+        <span class="tchip"><span class="sw" style="background:#CFA05C"></span><b>Acento</b><span class="hex">#CFA05C</span></span>
+        <span class="tchip"><span class="sw" style="background:#6EA57C"></span><b>Éxito</b><span class="hex">#6EA57C</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#15110B;--surface:#201A11;--text:#F3EBDA;--text2:#A89877;--border:#35291A;--accent:#CFA05C;--accent-ink:#15110B;--success:#6EA57C;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ VARIACIÓN 2 ============================================================ -->
+<div class="variation">
+  <div class="variation-head">
+    <p class="vnum">Variación 2</p>
+    <h2>Lujo frío / tech</h2>
+    <p>Grafito, azul acero y platino — el registro de un configurador EV premium, preciso y contemporáneo.</p>
+  </div>
+  <div class="modes">
+
+    <div class="mode-col">
+      <p class="mode-label">Modo claro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#F1F4F6"></span><b>Fondo</b><span class="hex">#F1F4F6</span></span>
+        <span class="tchip"><span class="sw" style="background:#FFFFFF"></span><b>Superficie</b><span class="hex">#FFFFFF</span></span>
+        <span class="tchip"><span class="sw" style="background:#12181F"></span><b>Texto</b><span class="hex">#12181F</span></span>
+        <span class="tchip"><span class="sw" style="background:#5A6570"></span><b>Texto 2</b><span class="hex">#5A6570</span></span>
+        <span class="tchip"><span class="sw" style="background:#DAE2E8"></span><b>Borde</b><span class="hex">#DAE2E8</span></span>
+        <span class="tchip"><span class="sw" style="background:#3E5872"></span><b>Acento</b><span class="hex">#3E5872</span></span>
+        <span class="tchip"><span class="sw" style="background:#3D7F63"></span><b>Éxito</b><span class="hex">#3D7F63</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#F1F4F6;--surface:#FFFFFF;--text:#12181F;--text2:#5A6570;--border:#DAE2E8;--accent:#3E5872;--accent-ink:#FFFFFF;--success:#3D7F63;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+    <div class="mode-col">
+      <p class="mode-label">Modo oscuro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#0A0F16"></span><b>Fondo</b><span class="hex">#0A0F16</span></span>
+        <span class="tchip"><span class="sw" style="background:#121B26"></span><b>Superficie</b><span class="hex">#121B26</span></span>
+        <span class="tchip"><span class="sw" style="background:#E7EDF3"></span><b>Texto</b><span class="hex">#E7EDF3</span></span>
+        <span class="tchip"><span class="sw" style="background:#8B97A5"></span><b>Texto 2</b><span class="hex">#8B97A5</span></span>
+        <span class="tchip"><span class="sw" style="background:#22303F"></span><b>Borde</b><span class="hex">#22303F</span></span>
+        <span class="tchip"><span class="sw" style="background:#A9BCCB"></span><b>Acento</b><span class="hex">#A9BCCB</span></span>
+        <span class="tchip"><span class="sw" style="background:#5CA989"></span><b>Éxito</b><span class="hex">#5CA989</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#0A0F16;--surface:#121B26;--text:#E7EDF3;--text2:#8B97A5;--border:#22303F;--accent:#A9BCCB;--accent-ink:#0A0F16;--success:#5CA989;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ VARIACIÓN 3 ============================================================ -->
+<div class="variation">
+  <div class="variation-head">
+    <p class="vnum">Variación 3</p>
+    <h2>Tono joya — esmeralda</h2>
+    <p>Un verde esmeralda profundo como base dominante con un acento champán neutro — sofisticación con un punto de color con carácter.</p>
+  </div>
+  <div class="modes">
+
+    <div class="mode-col">
+      <p class="mode-label">Modo claro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#EFF4F0"></span><b>Fondo</b><span class="hex">#EFF4F0</span></span>
+        <span class="tchip"><span class="sw" style="background:#FFFFFF"></span><b>Superficie</b><span class="hex">#FFFFFF</span></span>
+        <span class="tchip"><span class="sw" style="background:#10241C"></span><b>Texto</b><span class="hex">#10241C</span></span>
+        <span class="tchip"><span class="sw" style="background:#58685E"></span><b>Texto 2</b><span class="hex">#58685E</span></span>
+        <span class="tchip"><span class="sw" style="background:#D6E3DA"></span><b>Borde</b><span class="hex">#D6E3DA</span></span>
+        <span class="tchip"><span class="sw" style="background:#8E7A52"></span><b>Acento</b><span class="hex">#8E7A52</span></span>
+        <span class="tchip"><span class="sw" style="background:#2F7A55"></span><b>Éxito</b><span class="hex">#2F7A55</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#EFF4F0;--surface:#FFFFFF;--text:#10241C;--text2:#58685E;--border:#D6E3DA;--accent:#8E7A52;--accent-ink:#10241C;--success:#2F7A55;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+    <div class="mode-col">
+      <p class="mode-label">Modo oscuro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#0A1D16"></span><b>Fondo</b><span class="hex">#0A1D16</span></span>
+        <span class="tchip"><span class="sw" style="background:#12281E"></span><b>Superficie</b><span class="hex">#12281E</span></span>
+        <span class="tchip"><span class="sw" style="background:#E9F2ED"></span><b>Texto</b><span class="hex">#E9F2ED</span></span>
+        <span class="tchip"><span class="sw" style="background:#8FA79C"></span><b>Texto 2</b><span class="hex">#8FA79C</span></span>
+        <span class="tchip"><span class="sw" style="background:#1E4433"></span><b>Borde</b><span class="hex">#1E4433</span></span>
+        <span class="tchip"><span class="sw" style="background:#C9B992"></span><b>Acento</b><span class="hex">#C9B992</span></span>
+        <span class="tchip"><span class="sw" style="background:#4FAE7C"></span><b>Éxito</b><span class="hex">#4FAE7C</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#0A1D16;--surface:#12281E;--text:#E9F2ED;--text2:#8FA79C;--border:#1E4433;--accent:#C9B992;--accent-ink:#0A1D16;--success:#4FAE7C;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ VARIACIÓN 4 ============================================================ -->
+<div class="variation">
+  <div class="variation-head">
+    <p class="vnum">Variación 4</p>
+    <h2>Monocromático + acento</h2>
+    <p>Escala de grises casi pura con un único color restringido a precio y llamados a la acción — disciplina editorial, un solo punto de énfasis.</p>
+  </div>
+  <div class="modes">
+
+    <div class="mode-col">
+      <p class="mode-label">Modo claro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#F4F4F3"></span><b>Fondo</b><span class="hex">#F4F4F3</span></span>
+        <span class="tchip"><span class="sw" style="background:#FFFFFF"></span><b>Superficie</b><span class="hex">#FFFFFF</span></span>
+        <span class="tchip"><span class="sw" style="background:#191917"></span><b>Texto</b><span class="hex">#191917</span></span>
+        <span class="tchip"><span class="sw" style="background:#6B6B67"></span><b>Texto 2</b><span class="hex">#6B6B67</span></span>
+        <span class="tchip"><span class="sw" style="background:#DDDDDA"></span><b>Borde</b><span class="hex">#DDDDDA</span></span>
+        <span class="tchip"><span class="sw" style="background:#9C3B2E"></span><b>Acento</b><span class="hex">#9C3B2E</span></span>
+        <span class="tchip"><span class="sw" style="background:#4B7A5B"></span><b>Éxito</b><span class="hex">#4B7A5B</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#F4F4F3;--surface:#FFFFFF;--text:#191917;--text2:#6B6B67;--border:#DDDDDA;--accent:#9C3B2E;--accent-ink:#FFFFFF;--success:#4B7A5B;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+    <div class="mode-col">
+      <p class="mode-label">Modo oscuro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#131312"></span><b>Fondo</b><span class="hex">#131312</span></span>
+        <span class="tchip"><span class="sw" style="background:#1D1D1B"></span><b>Superficie</b><span class="hex">#1D1D1B</span></span>
+        <span class="tchip"><span class="sw" style="background:#F1F1EE"></span><b>Texto</b><span class="hex">#F1F1EE</span></span>
+        <span class="tchip"><span class="sw" style="background:#9A9A94"></span><b>Texto 2</b><span class="hex">#9A9A94</span></span>
+        <span class="tchip"><span class="sw" style="background:#333330"></span><b>Borde</b><span class="hex">#333330</span></span>
+        <span class="tchip"><span class="sw" style="background:#C24E3C"></span><b>Acento</b><span class="hex">#C24E3C</span></span>
+        <span class="tchip"><span class="sw" style="background:#5E9A73"></span><b>Éxito</b><span class="hex">#5E9A73</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#131312;--surface:#1D1D1B;--text:#F1F1EE;--text2:#9A9A94;--border:#333330;--accent:#C24E3C;--accent-ink:#FFFFFF;--success:#5E9A73;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ VARIACIÓN 5 ============================================================ -->
+<div class="variation">
+  <div class="variation-head">
+    <p class="vnum">Variación 5</p>
+    <h2>Editorial claro</h2>
+    <p>Piedra cálida y tinta oscura — el registro de una revista de lujo impresa, luminoso en vez de dramático.</p>
+  </div>
+  <div class="modes">
+
+    <div class="mode-col">
+      <p class="mode-label">Modo claro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#F7F4EC"></span><b>Fondo</b><span class="hex">#F7F4EC</span></span>
+        <span class="tchip"><span class="sw" style="background:#FFFFFF"></span><b>Superficie</b><span class="hex">#FFFFFF</span></span>
+        <span class="tchip"><span class="sw" style="background:#201B14"></span><b>Texto</b><span class="hex">#201B14</span></span>
+        <span class="tchip"><span class="sw" style="background:#6D6252"></span><b>Texto 2</b><span class="hex">#6D6252</span></span>
+        <span class="tchip"><span class="sw" style="background:#E4DCC8"></span><b>Borde</b><span class="hex">#E4DCC8</span></span>
+        <span class="tchip"><span class="sw" style="background:#23262E"></span><b>Acento</b><span class="hex">#23262E</span></span>
+        <span class="tchip"><span class="sw" style="background:#3E7A54"></span><b>Éxito</b><span class="hex">#3E7A54</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#F7F4EC;--surface:#FFFFFF;--text:#201B14;--text2:#6D6252;--border:#E4DCC8;--accent:#23262E;--accent-ink:#F7F4EC;--success:#3E7A54;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+    <div class="mode-col">
+      <p class="mode-label">Modo oscuro</p>
+      <div class="chips">
+        <span class="tchip"><span class="sw" style="background:#16140F"></span><b>Fondo</b><span class="hex">#16140F</span></span>
+        <span class="tchip"><span class="sw" style="background:#1F1C16"></span><b>Superficie</b><span class="hex">#1F1C16</span></span>
+        <span class="tchip"><span class="sw" style="background:#F1ECDF"></span><b>Texto</b><span class="hex">#F1ECDF</span></span>
+        <span class="tchip"><span class="sw" style="background:#A69A82"></span><b>Texto 2</b><span class="hex">#A69A82</span></span>
+        <span class="tchip"><span class="sw" style="background:#34301F"></span><b>Borde</b><span class="hex">#34301F</span></span>
+        <span class="tchip"><span class="sw" style="background:#D9D2BF"></span><b>Acento</b><span class="hex">#D9D2BF</span></span>
+        <span class="tchip"><span class="sw" style="background:#6B9C7C"></span><b>Éxito</b><span class="hex">#6B9C7C</span></span>
+      </div>
+      <div class="demo-browser" style="--bg:#16140F;--surface:#1F1C16;--text:#F1ECDF;--text2:#A69A82;--border:#34301F;--accent:#D9D2BF;--accent-ink:#16140F;--success:#6B9C7C;">
+        <div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-url">proyectoauto.mx/resultados?ciudad=monterrey</div></div>
+        <div class="demo-head"><p class="eyebrow">Resultados en Monterrey</p><h2>Vehículos disponibles</h2></div>
+        <div class="demo-card">
+          <div>
+            <p class="demo-card-name">Nissan Versa Advance 2025</p>
+            <p class="demo-card-agency">Nissan Cumbres</p>
+            <div class="demo-badges">
+              <span class="demo-badge">Automático</span>
+              <span class="demo-badge">Techo corredizo</span>
+              <span class="demo-badge pos">Disponible</span>
+            </div>
+          </div>
+          <div class="demo-card-right">
+            <p class="demo-price">$389,000<small>MXN aprox.</small></p>
+            <button class="demo-btn">Agregar a comparar</button>
+          </div>
+        </div>
+        <div class="demo-footer"><div><b>2 seleccionados</b><span>Nissan Versa · VW Virtus</span></div><button class="demo-go">Comparar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>

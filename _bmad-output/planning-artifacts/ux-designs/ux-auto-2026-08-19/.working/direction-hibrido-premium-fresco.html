@@ -146,10 +146,31 @@ table.cmp tr td:last-child{border-radius:0 10px 10px 0;}
   background:#FF5C39;color:#fff;border:none;font-weight:700;font-size:12px;
   padding:11px 18px;border-radius:999px;width:100%;
 }
+
+/* --- Browser frame (web equivalent of hero), reuses .screen theming --- */
+.browser{
+  width:760px;border-radius:20px;overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.28);flex-shrink:0;
+}
+.browser-bar{background:#0A0A0B;padding:14px 18px;display:flex;align-items:center;gap:8px;}
+.browser-bar .dot{width:10px;height:10px;border-radius:50%;background:#2E2D31;}
+.browser-bar .url{
+  margin-left:14px;background:#1C1C1F;color:#A9A6A0;font-size:12px;
+  padding:6px 14px;border-radius:6px;flex:1;
+}
+.browser .screen{height:auto;border-radius:0;}
+.screen.wide .topbar{padding:34px 40px 20px;}
+.screen.wide .topbar h2{font-size:26px;}
+.screen.wide .filters{padding:16px 40px 12px;overflow-x:visible;flex-wrap:wrap;}
+.screen.wide .cards{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  padding:16px 40px 40px;overflow:visible;
+}
+.screen.wide .compare-bar{position:sticky;bottom:0;padding:18px 40px;}
 </style>
 
 <h1 class="page-title">Dirección 4 — Híbrido Premium-Fresco</h1>
-<p class="page-sub">Pantalla principal en modo claro y oscuro lado a lado, tabla comparativa con toggle en vivo, y estado vacío.</p>
+<p class="page-sub">Pantalla principal en móvil (modo claro y oscuro lado a lado) y en escritorio (con toggle en vivo), tabla comparativa con toggle en vivo, y estado vacío.</p>
 
 <div class="notes-panel">
   <b>Notas de diseño:</b> base neutra (crema en claro, casi-negro en oscuro) con un único acento
@@ -240,6 +261,84 @@ table.cmp tr td:last-child{border-radius:0 10px 10px 0;}
       <div class="screen theme-dark">
         <div class="notch"></div>
         <div class="status"></div>
+        <div class="topbar">
+          <h2><span class="brand-dot"></span>Monterrey</h2>
+          <p>4 vehículos encontrados</p>
+        </div>
+        <div class="filters">
+          <span class="chip active">Ciudad: Monterrey</span>
+          <span class="chip">Año</span>
+          <span class="chip">Precio</span>
+          <span class="chip">Carrocería</span>
+          <span class="chip">Transmisión</span>
+          <span class="chip">Equipamiento</span>
+          <span class="chip">Color</span>
+          <span class="chip">Disponibilidad</span>
+        </div>
+        <div class="cards">
+          <div class="card selected">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Nissan Versa Advance 2025</p>
+                <p class="card-agency">Nissan Cumbres</p>
+              </div>
+              <p class="card-price">$389,000<span class="price-small">MXN aprox.</span></p>
+            </div>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Aire acondicionado</span>
+            </div>
+            <div class="card-actions"><button class="cmp-btn on">✓ En comparación</button></div>
+          </div>
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Kia Rio LX 2025</p>
+                <p class="card-agency">Kia Valle Oriente</p>
+              </div>
+              <p class="card-price">$359,500<span class="price-small">MXN aprox.</span></p>
+            </div>
+            <div class="badges">
+              <span class="badge">Techo corredizo</span>
+              <span class="badge">Pantalla táctil</span>
+            </div>
+            <div class="card-actions"><button class="cmp-btn">Agregar a comparar</button></div>
+          </div>
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <p class="card-name">Chevrolet Aveo Premier 2025</p>
+                <p class="card-agency">Chevrolet Contry</p>
+              </div>
+              <p class="card-price">$329,900<span class="price-small">MXN aprox.</span></p>
+            </div>
+            <div class="badges">
+              <span class="badge">Automático</span>
+              <span class="badge">Bolsas de aire x6</span>
+            </div>
+            <div class="card-actions"><button class="cmp-btn">Agregar a comparar</button></div>
+          </div>
+        </div>
+        <div class="compare-bar">
+          <div><b>1 seleccionado</b><span>Nissan Versa Advance</span></div>
+          <button class="go-btn">Comparar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO ESCRITORIO con toggle JS -->
+  <div>
+    <p class="col-label">Pantalla principal — escritorio (toggle en vivo)</p>
+    <div class="toggle-row">
+      <button class="toggle-btn" onclick="document.getElementById('heroBrowserScreen').classList.toggle('theme-dark'); document.getElementById('heroBrowserScreen').classList.toggle('theme-light');">Cambiar claro / oscuro</button>
+    </div>
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="url">proyectoauto.mx/resultados?ciudad=monterrey</div>
+      </div>
+      <div class="screen theme-light wide" id="heroBrowserScreen">
         <div class="topbar">
           <h2><span class="brand-dot"></span>Monterrey</h2>
           <p>4 vehículos encontrados</p>
