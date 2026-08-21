@@ -21,3 +21,12 @@ npm-debug.log
 .DS_Store
 Thumbs.db
 .idea/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+override.tf
+override.tf.json
+*.auto.tfvars
+# .terraform.lock.hcl se mantiene versionado a propósito
