@@ -43,8 +43,8 @@
 ## Deferred from: build workflow of story-1-3 (2026-08-24)
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
-  summary: Activar branch protection real en `main` (`gh api repos/AntonioTamez/auto/branches/main/protection`) requiriendo los status checks `backend`/`frontend` — hoy solo existe el runbook manual documentado en `README.md` § CI.
-  evidence: El humano confirmó los nombres de job (`backend`/`frontend`) y el mecanismo (`gh api`) el 2026-08-24, pero GitHub no ofrece un status check como seleccionable en branch protection hasta que corrió al menos una vez, y `step-03` de este workflow prohíbe push/remote ops. Activar en cuanto exista el primer push/PR real que ejercite `.github/workflows/ci.yml`.
+  summary: Branch protection real en `main` (requerir los status checks `backend`/`frontend` antes de fusionar, AD-17) **bloqueada por el plan de GitHub**, no por falta de configuración — `gh api repos/AntonioTamez/auto/branches/main/protection` devuelve `403 "Upgrade to GitHub Pro or make this repository public to enable this feature"`. El plan Free no ofrece required status checks en repos privados.
+  evidence: Intentado el 2026-08-24 después del primer push real (`backend`/`frontend` corrieron en verde, commit `d6c386a`, confirmado vía `gh api repos/AntonioTamez/auto/commits/d6c386a/check-runs`) — el payload ya era correcto (nombres de job confirmados por el humano), pero GitHub rechazó la llamada por el plan de la cuenta, no por un error de configuración. Hoy el pipeline corre y reporta en cada push/PR, pero **no bloquea el merge** — un PR con `backend`/`frontend` en rojo todavía se puede fusionar manualmente. Resolver cuando el humano decida entre actualizar a GitHub Pro o hacer el repo público (ambas opciones fueron explícitamente puestas sobre la mesa y rechazadas por ahora).
 
 ## Deferred from: code review of story-1-3 (2026-08-24)
 

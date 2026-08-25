@@ -62,14 +62,17 @@ Ambos jobs deben pasar para que un PR sea "verde"; ninguno depende del otro y am
 
 ### Branch protection (bloquear merge si el pipeline falla)
 
-AD-17 exige que un PR no sea fusionable si el pipeline falla. Esto se resuelve activando **branch protection** en `main` desde GitHub (Settings → Branches → Branch protection rules) requiriendo los status checks `backend` y `frontend`:
+AD-17 exige que un PR no sea fusionable si el pipeline falla. Esto se resuelve activando **branch protection** en `main` desde GitHub (Settings → Branches → Branch protection rules) requiriendo los status checks `backend` y `frontend`.
 
-1. Que exista al menos un run del workflow (para que GitHub ofrezca `backend`/`frontend` como checks disponibles).
-2. Settings → Branches → Add rule → branch name pattern `main`.
-3. Marcar "Require status checks to pass before merging" y seleccionar `backend` y `frontend`.
-4. (Recomendado) Marcar "Require branches to be up to date before merging".
+**Bloqueado por el plan de GitHub, no por configuración:** con el repo en privado y plan Free, GitHub rechaza esta función (`403 "Upgrade to GitHub Pro or make this repository public to enable this feature"`) aunque el workflow ya corrió en verde (`backend`/`frontend` disponibles como checks). Hasta que se resuelva (GitHub Pro o repo público), el pipeline reporta en cada push/PR pero **no bloquea** el merge — ver `_bmad-output/implementation-artifacts/deferred-work.md`.
 
-Este paso mutaría configuración real del repositorio en GitHub, por lo que no se activó automáticamente como parte de esta historia -- requiere confirmación humana explícita antes de ejecutarse. Alternativa vía `gh api` (equivalente a los pasos de arriba), una vez que exista al menos un run de `backend`/`frontend`:
+Pasos para activarlo en cuanto el plan lo permita:
+
+1. Settings → Branches → Add rule → branch name pattern `main`.
+2. Marcar "Require status checks to pass before merging" y seleccionar `backend` y `frontend`.
+3. (Recomendado) Marcar "Require branches to be up to date before merging".
+
+Alternativa vía `gh api` (equivalente a los pasos de arriba):
 
 ```
 gh api repos/AntonioTamez/auto/branches/main/protection \

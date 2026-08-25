@@ -67,7 +67,7 @@ context:
 - [x] `tests/Api.Tests/PlaceholderTests.cs` -- una prueba trivial que pase -- valida el pipeline end-to-end (falla si algo lo rompe deliberadamente)
 - [x] `Auto.slnx` -- agregar `tests/Api.Tests` a la solución -- para que `dotnet build/test Auto.slnx` lo incluya
 - [x] `.github/workflows/ci.yml` -- trigger `push` (cualquier rama) + `pull_request`; job `backend` (setup-dotnet vía `global.json`, restore/build/test); job `frontend` (setup-node vía `web/.nvmrc`, `npm ci`/build/test) -- cumple el AC de compilar+probar ambos stacks en cada push/PR
-- [ ] Branch protection en `main` -- requerir status checks `backend`/`frontend` antes de permitir merge -- cumple AD-17; **decisión resuelta** (nombres confirmados, mecanismo `gh api`), pero **ejecución diferida**: requiere un push real primero (GitHub aún no ofrece los checks como seleccionables) y step-03 prohíbe push/remote ops en esta historia; runbook manual documentado en `README.md` § CI
+- [ ] Branch protection en `main` -- requerir status checks `backend`/`frontend` antes de permitir merge -- cumple AD-17; **intentado y bloqueado por el plan de GitHub**: tras el primer push real (commit `d6c386a`, `backend`/`frontend` en verde), `gh api .../protection` devolvió `403 "Upgrade to GitHub Pro or make this repository public"` — repos privados en plan Free no soportan required status checks. No es un gap de configuración; requiere que el humano decida (GitHub Pro o repo público). Documentado en `README.md` § CI y `deferred-work.md`
 - [x] `README.md` -- documentar cómo correr build+test localmente y cómo activar branch protection -- reproducibilidad (sigue el patrón de la historia 1.2)
 
 **Acceptance Criteria:**
@@ -79,6 +79,8 @@ context:
 ## Spec Change Log
 
 - 2026-08-24 -- Implementación ejecutada: `tests/Api.Tests` (xunit), `Auto.slnx` actualizado, `.github/workflows/ci.yml` (jobs `backend`/`frontend`), `README.md` actualizado. Branch protection en `main` **no** se activó (item Ask First del spec) -- requiere que un humano confirme el mecanismo (branch protection real vía `gh api`/UI) antes de mutar settings del repo real; ver README § CI para el paso manual documentado.
+- 2026-08-24 -- Code review: patches aplicados (`concurrency`, `permissions`, `timeout-minutes`, guard de rama borrada en `ci.yml`; `tests/Directory.Build.props` para eliminar duplicación de `TargetFramework`/`Nullable`; payload `gh api` completo en README). Sin `intent_gap`/`bad_spec`; 7 hallazgos reales no bloqueantes van a `deferred-work.md`.
+- 2026-08-24 -- Commit `d6c386a` pusheado a `main` (confirmado por el humano). `backend`/`frontend` corrieron en verde en GitHub. Intento de activar branch protection vía `gh api` bloqueado por el plan de GitHub (`403`, repos privados en Free no soportan required status checks) -- no es un gap de spec/código; queda como decisión pendiente del humano (GitHub Pro vs. repo público), documentada en README § CI y `deferred-work.md`.
 
 ## Design Notes
 
