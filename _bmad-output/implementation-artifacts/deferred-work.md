@@ -17,6 +17,8 @@
 - `Program.cs` usa `UseHttpsRedirection()` sin `UseForwardedHeaders` (`src/Api/Program.cs:15`); provocará un redirect-loop una vez desplegado detrás del reverse proxy de Azure Container Apps. Revisar en la historia 1.4 (CD a dev).
 - `global.json` fija `rollForward: latestFeature` (`global.json:3-4`); puede fallar en máquinas de CI que no tengan exactamente el feature band 10.0.3xx del SDK. Revisar al configurar los runners de la historia 1.3.
 
+## Deferred from: build workflow of story-1-2 (2026-08-20)
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-2-infraestructura-azure-definida-en-terraform.md`
   summary: `project_prefix` (default `auto` en `infra/terraform/variables.tf`) debe actualizarse al nombre definitivo del producto antes del primer `terraform apply` real (historia 1.4).
   evidence: Confirmado explícitamente por el humano el 2026-08-20 — el nombre final de la app aún no está decidido (ver también Deferred "Product naming" en `ARCHITECTURE-SPINE.md`). Cambiar el default después de un `apply` real requeriría recrear recursos con nombre globalmente único (Storage Account, PostgreSQL), no solo renombrarlos.
@@ -31,3 +33,9 @@
 - No se crea ningún `azurerm_storage_container` dentro de `azurerm_storage_account.main` (`infra/terraform/main.tf`) — solo existe la cuenta, no un contenedor con el nivel de acceso adecuado para imágenes de vehículos. Revisar cuando la app necesite escribir/leer blobs reales.
 - `azurerm_communication_service.main` solo crea el servicio base; falta un Email Communication Service vinculado y un dominio de remitente verificado, que es lo que realmente se necesita para enviar los emails de OTP (AD-4). Revisar en la Epic 5 (cuentas/OTP).
 - No hay estrategia de identidad administrada definida para que el futuro Container App se autentique contra Storage/PostgreSQL/Communication Service — todo apunta hoy a connection strings/keys (ver el output sensible de password de Postgres) en vez de acceso sin contraseña vía `azurerm_user_assigned_identity` + RBAC. Revisar en la historia 1.4 (CD) al definir cómo la API real consume estos recursos.
+
+## Deferred from: code review of story-1-2 (2026-08-20, segunda pasada)
+
+- Sin estrategia de gestión de secretos (Key Vault u otro) para el password admin de Postgres (`infra/terraform/main.tf:15`) — hoy solo existe como `random_password` en el state de Terraform y como output `sensitive`, sin plan de almacenamiento/rotación. Distinto del gap de identidad administrada ya registrado arriba (ese es sobre cómo se autentica la app; este es sobre dónde vive el secreto).
+- El patrón de acceso público de `azurerm_storage_account.main` para imágenes de vehículos no está decidido (CORS, `network_rules`, URL pública vs. SAS/CDN) — extiende el gap ya registrado de que aún no existe un `azurerm_storage_container`. Revisar cuando la app necesite servir imágenes realmente al frontend Angular.
+- El storage account de bootstrap del state (`stautotfstate`, `infra/terraform/README.md`) no tiene restricción de red (`--default-action Deny` + reglas de IP) pese a alojar el password admin de Postgres en su `.tfstate` — requiere decidir primero qué IPs necesitan acceso (desarrolladores locales, runners de CI de la historia 1.3/1.4) antes de poder restringirlo sin romper el flujo documentado.

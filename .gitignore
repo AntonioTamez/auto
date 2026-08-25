@@ -28,5 +28,8 @@ Thumbs.db
 *.tfstate.backup
 override.tf
 override.tf.json
-*.auto.tfvars
+*_override.tf
+*_override.tf.json
+*.tfvars
+!*.tfvars.example
 # .terraform.lock.hcl se mantiene versionado a propósito

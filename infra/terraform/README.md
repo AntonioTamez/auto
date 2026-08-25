@@ -27,7 +27,8 @@ az storage account create \
   --location mexicocentral \
   --sku Standard_LRS \
   --kind StorageV2 \
-  --min-tls-version TLS1_2
+  --min-tls-version TLS1_2 \
+  --allow-blob-public-access false
 
 az storage container create \
   --name tfstate \
@@ -43,6 +44,14 @@ az storage account blob-service-properties update \
   --enable-delete-retention true \
   --delete-retention-days 30
 ```
+
+> **Nota de seguridad:** este storage account aloja el password admin de
+> Postgres dentro del `.tfstate` — más sensible que el contenedor de blobs
+> que administrará la app. Se bloqueó el acceso público a blobs
+> (`--allow-blob-public-access false`), pero **no** se restringió por red
+> (`--default-action Deny` + reglas de IP) porque eso requiere decidir de
+> antemano qué IPs necesitan acceso (desarrolladores locales, runners de
+> CI) — ver `deferred-work.md`.
 
 Ajusta los nombres si ya existen (el storage account debe ser globalmente
 único). Este bootstrap se documenta aquí porque es tooling de Terraform, no

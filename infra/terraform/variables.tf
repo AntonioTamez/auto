@@ -17,6 +17,11 @@ variable "location" {
   description = "Región de Azure donde se crean todos los recursos. Fija en mexicocentral (costo equivalente a South Central US, mejor latencia/residencia para Monterrey)."
   type        = string
   default     = "mexicocentral"
+
+  validation {
+    condition     = can(regex("^[a-z0-9]+$", var.location))
+    error_message = "location debe ser un nombre de región de Azure válido (minúsculas/números, sin espacios ni guiones, ej. mexicocentral)."
+  }
 }
 
 variable "project_prefix" {

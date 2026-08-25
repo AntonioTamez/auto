@@ -15,13 +15,10 @@ web/                 # Workspace Angular, independiente del backend (sin código
 
 ## Build
 
-Backend (por proyecto, desde la raíz del repo):
+Backend (desde la raíz del repo, vía la solución `Auto.slnx`):
 
 ```
-dotnet build src/Domain/Domain.csproj
-dotnet build src/Application/Application.csproj
-dotnet build src/Infrastructure/Infrastructure.csproj
-dotnet build src/Api/Api.csproj
+dotnet build Auto.slnx
 ```
 
 Frontend (desde `web/`):
@@ -29,3 +26,11 @@ Frontend (desde `web/`):
 ```
 npm run build
 ```
+
+## Ejecutar la API
+
+```
+dotnet run --project src/Api
+```
+
+Requiere haber corrido `dotnet restore` (implícito en `dotnet build`/`dotnet run`) al menos una vez. Versiones de toolchain fijadas en `global.json` (.NET SDK) y `web/.nvmrc` (Node).

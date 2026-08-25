@@ -3,7 +3,7 @@ title: 'Esqueleto del repositorio (Clean Architecture + Angular)'
 type: 'feature'
 created: '2026-08-20'
 status: 'done'
-review_loop_iteration: 0
+review_loop_iteration: 1
 baseline_commit: '7be8467c7e01af98b0bebc19feb68e1bb82ca992'
 context:
   - '{project-root}/_bmad-output/implementation-artifacts/epic-1-context.md'
@@ -29,7 +29,7 @@ context:
 - Todos los proyectos .NET targetean `net10.0`.
 
 **Ask First:**
-- Si se crea un `.sln` explícito en la raíz agrupando los 4 proyectos .NET, o si el build se maneja solo por carpeta (`dotnet build` dentro de cada proyecto) — la spine no lo especifica.
+- Si se crea un `.sln` explícito en la raíz agrupando los 4 proyectos .NET, o si el build se maneja solo por carpeta (`dotnet build` dentro de cada proyecto) — la spine no lo especifica. **[RESUELTO 2026-08-20 vía code review]:** se crea `Auto.slnx` en la raíz agrupando los 4 proyectos (formato `.slnx` nativo del SDK .NET 10, equivalente moderno al `.sln` clásico). Confirmado por el humano.
 
 **Never:**
 - No implementar entidades de dominio reales, casos de uso, endpoints funcionales, Terraform ni pipelines CI/CD — corresponden a las historias 1.2 en adelante.
@@ -64,6 +64,23 @@ context:
 **Acceptance Criteria:**
 - Given un repositorio vacío, when se hace scaffold del backend y del frontend, then ambos proyectos compilan localmente sin errores.
 - Given el scaffold del backend, when se revisa la estructura de carpetas, then coincide con el Structural Seed del Architecture Spine (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Api`) y `Domain` no tiene ninguna dependencia hacia afuera.
+
+### Review Findings
+
+- [x] [Review][Decision] Decisión de `.sln` no confirmada por el humano — el spec marca explícitamente esta elección como "Ask First" (`spec-1-1...md:32`), pero el diff resuelve la ambigüedad de forma unilateral (sin `.sln`, build por carpeta, documentado en `README.md:78-93`) sin evidencia de que se haya pedido confirmación humana. **Resuelto:** el humano confirmó crear `Auto.slnx` (equivalente moderno al `.sln`), agrupando los 4 proyectos; ver `Ask First` arriba y `Auto.slnx`.
+- [x] [Review][Patch] Routing de Angular configurado pese a la restricción "Never" del spec [web/src/app/app.config.ts:2,9, web/src/app/app.ts:2,7, web/src/app/app.html:3] — el spec prohíbe explícitamente configurar routing en esta historia ("No configurar ... routing de Angular todavía"), pero `ng new` se generó con routing habilitado (`provideRouter`, `RouterOutlet`, `<router-outlet />`), contradiciendo también el propio "Suggested Review Order" del spec que afirma "sin ... routing todavía". **Resuelto:** se retiró `provideRouter`/`RouterOutlet`/`<router-outlet />` y se eliminó `app.routes.ts` (sin uso).
+- [x] [Review][Patch] Estado del spec desincronizado con sprint-status.yaml [spec-1-1...md:5] — el frontmatter declara `status: 'done'` mientras `sprint-status.yaml` marca la historia como `review`; deben coincidir. **Resuelto:** frontmatter puesto en `review`; se sincroniza a `done` en ambos archivos al cerrar esta revisión.
+- [x] [Review][Patch] `web/package.json` sin salto de línea final [web/package.json:32] — contradice la regla propia `insert_final_newline = true` de ambos `.editorconfig` del repo. **Resuelto.**
+- [x] [Review][Patch] `main.ts` solo hace `console.error` si falla el bootstrap [web/src/main.ts:5-6] — el usuario ve una página en blanco sin indicación de fallo. **Resuelto:** se agrega `document.body.textContent = 'Failed to start application'` en el `.catch`.
+- [x] [Review][Patch] `README.md` no documenta cómo correr la API [README.md:78-93] — faltan `dotnet restore`, `dotnet run --project src/Api`, y referencia cruzada a las versiones ya fijadas en `global.json`/`web/.nvmrc`. **Resuelto** al documentar el nuevo flujo de build vía `Auto.slnx`.
+- [x] [Review][Defer] Sin `.gitattributes`; `end_of_line = crlf` fijado repo-wide en `.editorconfig` sin política para runners Linux en CI [.editorconfig:8] — deferred, pre-existing
+- [x] [Review][Defer] RFC 7807 Problem Details no configurado en `Program.cs` pese a que `epic-1-context.md` lo señala como decisión de scaffold [src/Api/Program.cs:1-17] — deferred, pre-existing
+- [x] [Review][Defer] Middleware de validación JWT centralizado ausente, sin registrar como diferido [src/Api/Program.cs:1-17] — deferred, pre-existing
+- [x] [Review][Defer] No existe proyecto de tests .NET; la historia 1.3 (CI build+test) no tendrá qué correr del lado backend [src/] — deferred, pre-existing
+- [x] [Review][Defer] `.gitignore` raíz no cubre patrones de secretos/env más allá de lo exigido por el spec [.gitignore:1-23] — deferred, pre-existing
+- [x] [Review][Defer] BOM UTF-8 inconsistente entre archivos generados (`Domain.csproj`, `Application.csproj`, `Infrastructure.csproj`, `launchSettings.json` lo tienen; `Api.csproj`, `Program.cs` no) [src/Domain/Domain.csproj:1] — deferred, pre-existing
+- [x] [Review][Defer] `Program.cs` usa `UseHttpsRedirection()` sin `UseForwardedHeaders`, causará redirect-loop detrás de un reverse proxy (Azure Container Apps) [src/Api/Program.cs:15] — deferred, pre-existing
+- [x] [Review][Defer] `global.json` con `rollForward: latestFeature` puede fallar en máquinas de CI con otro feature band del SDK 10 [global.json:3-4] — deferred, pre-existing
 
 ## Spec Change Log
 

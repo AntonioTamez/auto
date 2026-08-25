@@ -23,12 +23,12 @@ context:
 **Always:**
 - Los 6 recursos (resource group + 5) viven en un único `azurerm_resource_group`; ningún recurso referencia un `resource_group_name` externo (evita huérfanos al destruir, AC del épico).
 - Nombres y tags de todo recurso se derivan de `locals.tf` (única fuente), incluyendo siempre `environment` (dev/staging/prod) — nunca hardcodeados por recurso.
-- Región fija `mexicocentral` (decidido: costo equivalente a South Central US, mejor latencia/residencia para Monterrey).
+- Región fija `mexicocentral` (decidido: costo equivalente a South Central US, mejor latencia/residencia para Monterrey). **[EXCEPCIÓN ACEPTADA 2026-08-20 vía code review]:** `azurerm_communication_service.data_location` queda en `"United States"` — Azure Communication Services no soporta `data_location = "Mexico"` (limitación real de la plataforma, no elección). Aceptado por el humano; revisar antes de que la historia de OTP (Epic 5) dependa de este recurso en producción (ver `deferred-work.md`).
 - Backend de state: `backend "azurerm" {}` parcial (sin valores hardcodeados) — el storage account/container reales se pasan vía `-backend-config` en `init`, nunca en el código versionado.
 - PostgreSQL Flexible Server usa tier Burstable B1ms; Storage Account cubre Blob Storage; Communication Service solo email (spine AD-4).
 
 **Ask First:**
-- Si Container Apps requiere solo `azurerm_container_app_environment` (plataforma) o también un `azurerm_container_app` placeholder con imagen pública temporal — aún no existe imagen real de la app (llega en historia 1.4).
+- Si Container Apps requiere solo `azurerm_container_app_environment` (plataforma) o también un `azurerm_container_app` placeholder con imagen pública temporal — aún no existe imagen real de la app (llega en historia 1.4). **[RESUELTO 2026-08-20 vía code review]:** confirmado por el humano — solo el Environment, sin placeholder de Container App.
 - Prefijo de nombre de proyecto en recursos (propuesto `auto`, dado que el nombre de producto sigue siendo placeholder en el PRD) — confirmar antes de fijarlo en `locals.tf`.
 
 **Never:**
@@ -66,6 +66,19 @@ context:
 - Given el código Terraform en `infra/terraform/`, when se ejecuta `terraform validate`, then no reporta errores de sintaxis ni de referencias.
 - Given el mismo código, when se ejecuta `terraform plan -var environment=dev`, then el plan muestra la creación de un resource group + los 5 recursos del spine, todos con tags que incluyen `environment=dev`, sin errores del provider `azurerm`.
 - Given `main.tf`, when se revisa cada recurso, then ninguno referencia un `resource_group_name` distinto al resource group definido en el mismo archivo (garantiza que un futuro `terraform destroy` no deja huérfanos).
+
+### Review Findings
+
+- [x] [Review][Decision] Container Apps: item Ask-First resuelto sin confirmación explícita — El spec marca como Ask First si Container Apps requiere solo `azurerm_container_app_environment` o también un `azurerm_container_app` placeholder. Se implementó solo el Environment (`main.tf:31-36`), pero a diferencia de `project_prefix` (que sí tiene confirmación humana registrada en `deferred-work.md`), esta decisión se resolvió en el Code Map del spec durante la planificación, sin pasar por el gate Ask-First con el humano en tiempo de ejecución. **Resuelto:** el humano confirmó solo el Environment, sin placeholder — ver `Ask First` arriba.
+- [x] [Review][Decision] `azurerm_communication_service.data_location = "United States"` se desvía de la restricción Always "Región fija mexicocentral" — Azure Communication Services no soporta `data_location = "Mexico"` (limitación real de la plataforma, no elección). Se resolvió fijando `"United States"` (`main.tf:71-76`) y se registró en `deferred-work.md` después del hecho, pero nunca se escaló como decisión antes de implementar pese a desviarse de una restricción congelada (frozen) del spec. **Resuelto:** el humano aceptó el gap — revisar antes de Epic 5; ver `Always` arriba y `deferred-work.md`.
+- [x] [Review][Patch] Sin protección `lifecycle` en recursos con nombre derivado de inputs mutables [`infra/terraform/main.tf:47`, `infra/terraform/main.tf:59`] — un cambio futuro a `project_prefix`/`environment` (o drift del sufijo aleatorio) fuerza a Terraform a recrear `azurerm_postgresql_flexible_server.main`/`azurerm_storage_account.main`, destruyendo datos reales. **Aplicado:** `lifecycle { prevent_destroy = true }` en ambos recursos.
+- [x] [Review][Patch] Storage account de bootstrap del state remoto sin el mismo hardening que el gestionado por Terraform [`infra/terraform/README.md:24`] — aloja el password admin de Postgres dentro del `.tfstate` pero no documenta bloqueo de acceso público a blobs ni restricción de red, a diferencia de `azurerm_storage_account.main`. **Aplicado parcialmente:** se agregó `--allow-blob-public-access false` al bootstrap; la restricción de red (`--default-action Deny`) requiere decidir primero qué IPs necesitan acceso, así que quedó registrada en `deferred-work.md` en vez de aplicarse a ciegas.
+- [x] [Review][Patch] `.gitignore` no cubre `*.tfvars` en general, solo `*.auto.tfvars` [`.gitignore:24`] — un `dev.tfvars` de conveniencia (natural dado el flujo `-var environment=dev` del README) no quedaría ignorado. **Aplicado:** `*.tfvars` (con excepción `!*.tfvars.example`) reemplaza el patrón más angosto.
+- [x] [Review][Patch] `.gitignore` no cubre variantes wildcard de override (`*_override.tf`, `*_override.tf.json`) [`.gitignore:24`] — solo excluye los nombres literales `override.tf`/`override.tf.json`. **Aplicado.**
+- [x] [Review][Patch] variable `location` sin bloque de `validation`, a diferencia de `environment` y `project_prefix` [`infra/terraform/variables.tf:16`] — una región inválida solo se manifiesta como error opaco del provider durante `plan`. **Aplicado:** regex de minúsculas/números.
+- [x] [Review][Patch] Dos entradas de `deferred-work.md` quedaron mal ubicadas bajo el heading de story-1-1 en vez de story-1-2 [`_bmad-output/implementation-artifacts/deferred-work.md:20`] — cosmético, sin impacto funcional. **Aplicado:** se agregó un heading propio que las separa del story-1-1.
+- [x] [Review][Defer] Sin estrategia de gestión de secretos (Key Vault) para el password de Postgres [`infra/terraform/main.tf:15`] — deferred, pre-existing
+- [x] [Review][Defer] Patrón de acceso público de la Storage Account para imágenes (CORS/network rules) no decidido [`infra/terraform/main.tf:59`] — deferred, pre-existing
 
 ## Spec Change Log
 

@@ -54,6 +54,13 @@ resource "azurerm_postgresql_flexible_server" "main" {
   storage_mb             = 32768
   sku_name               = "B_Standard_B1ms"
   tags                   = local.common_tags
+
+  # Un cambio a project_prefix/environment (o drift del sufijo aleatorio)
+  # cambia el nombre y fuerza un destroy+recreate; esto protege los datos
+  # reales de una recreación accidental (review de código, historia 1.2).
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_storage_account" "main" {
@@ -66,6 +73,13 @@ resource "azurerm_storage_account" "main" {
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
   tags                            = local.common_tags
+
+  # Mismo riesgo que el Postgres Flexible Server de arriba: un cambio a
+  # project_prefix/environment fuerza un destroy+recreate de este nombre
+  # globalmente único, destruyendo blobs reales (review de código, historia 1.2).
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_communication_service" "main" {
