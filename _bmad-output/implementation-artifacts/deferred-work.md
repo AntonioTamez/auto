@@ -39,3 +39,39 @@
 - Sin estrategia de gestión de secretos (Key Vault u otro) para el password admin de Postgres (`infra/terraform/main.tf:15`) — hoy solo existe como `random_password` en el state de Terraform y como output `sensitive`, sin plan de almacenamiento/rotación. Distinto del gap de identidad administrada ya registrado arriba (ese es sobre cómo se autentica la app; este es sobre dónde vive el secreto).
 - El patrón de acceso público de `azurerm_storage_account.main` para imágenes de vehículos no está decidido (CORS, `network_rules`, URL pública vs. SAS/CDN) — extiende el gap ya registrado de que aún no existe un `azurerm_storage_container`. Revisar cuando la app necesite servir imágenes realmente al frontend Angular.
 - El storage account de bootstrap del state (`stautotfstate`, `infra/terraform/README.md`) no tiene restricción de red (`--default-action Deny` + reglas de IP) pese a alojar el password admin de Postgres en su `.tfstate` — requiere decidir primero qué IPs necesitan acceso (desarrolladores locales, runners de CI de la historia 1.3/1.4) antes de poder restringirlo sin romper el flujo documentado.
+
+## Deferred from: build workflow of story-1-3 (2026-08-24)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: Activar branch protection real en `main` (`gh api repos/AntonioTamez/auto/branches/main/protection`) requiriendo los status checks `backend`/`frontend` — hoy solo existe el runbook manual documentado en `README.md` § CI.
+  evidence: El humano confirmó los nombres de job (`backend`/`frontend`) y el mecanismo (`gh api`) el 2026-08-24, pero GitHub no ofrece un status check como seleccionable en branch protection hasta que corrió al menos una vez, y `step-03` de este workflow prohíbe push/remote ops. Activar en cuanto exista el primer push/PR real que ejercite `.github/workflows/ci.yml`.
+
+## Deferred from: code review of story-1-3 (2026-08-24)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: Un push a una rama con PR abierto dispara el pipeline dos veces (evento `push` y evento `pull_request` sobre el mismo commit) — el `concurrency` group agregado solo cancela runs superados por un push posterior, no elimina la doble ejecución del mismo commit.
+  evidence: `.github/workflows/ci.yml` dispara en `push: branches: ['**']` Y en `pull_request`, tal como lo exige el spec (AC: "push a cualquier rama" y "PR abierto" son escenarios independientes). Eliminarlo del todo requeriría restringir el trigger `push` (p.ej. solo a `main`), lo que rompería el AC de "push a cualquier rama corre el pipeline" para ramas sin PR — es una decisión de diseño, no un bug mecánico.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: `.github/workflows/ci.yml` no filtra por `paths`/`paths-ignore`, así que cambios solo de documentación (README, `_bmad-output/**`) igual disparan el build+test completo de ambos stacks.
+  evidence: Confirmado por el propio diff de esta historia (editó `README.md` y `deferred-work.md` sin tocar código, y aun así el pipeline correría completo). Definir la lista de paths a ignorar con seguridad (sin excluir accidentalmente algo que sí debería disparar CI) requiere más cuidado del que amerita un patch mecánico.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: Las Actions de terceros (`actions/checkout@v7`, `actions/setup-dotnet@v6`, `actions/setup-node@v7`) están fijadas solo a tag de versión mayor, no a SHA de commit — el hardening estándar contra supply-chain tampering las fija por SHA.
+  evidence: Hallazgo de code review (blind-hunter). Es una decisión de postura de seguridad a nivel de repo (aplicaría a cualquier workflow futuro, no solo a este), y fijar por SHA sin un mecanismo de actualización (Dependabot/Renovate) crea su propia carga de mantenimiento — mejor tratarlo como política transversal que como patch de esta historia.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: Ningún job publica artefactos de diagnóstico en caso de falla (sin `--logger trx` en `dotnet test`, sin `actions/upload-artifact` para logs/resultados) — un run rojo solo deja el log crudo de consola para triage.
+  evidence: Hallazgo de code review (blind-hunter). No lo exige ningún AC de esta historia; revisar cuando el pipeline empiece a fallar con frecuencia real y el log de consola no alcance para diagnosticar.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: El job `backend` no cachea paquetes NuGet (restore corre por red en cada run), a diferencia del job `frontend` que sí cachea `npm` vía `actions/setup-node`.
+  evidence: Hallazgo de code review (blind-hunter) — asimetría de optimización entre ambos jobs. No afecta corrección, solo tiempo de pipeline; revisar si el tiempo de `dotnet restore` se vuelve un cuello de botella real.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: Ningún job impone una barra de "sin warnings" (sin `TreatWarningsAsErrors`/`-warnaserror` en .NET, sin paso de lint/`tsc --noEmit` en Angular) — "build y test" tal como quedó implementado permite que warnings del compilador/analizador se fusionen mientras el código compile.
+  evidence: Hallazgo de code review (blind-hunter). No estaba en el alcance del AC de esta historia (solo exige compilar y correr pruebas); es una decisión de calidad de código a nivel de repo que amerita su propia conversación con el humano antes de imponerse como gate bloqueante.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: `src/Api/Program.cs` usa top-level statements sin el marcador `public partial class Program { }` que necesita `WebApplicationFactory<Program>` para pruebas de integración.
+  evidence: Hallazgo de code review (blind-hunter). Hoy no existe ninguna prueba de integración (solo el placeholder unitario de `Api.Tests`); agregar el marcador es trivial pero prematuro sin una prueba real que lo necesite — revisar cuando llegue la primera prueba de integración (candidata natural: historia 1.5, health-check end-to-end).
