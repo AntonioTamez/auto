@@ -43,6 +43,8 @@ Backend (xUnit, proyecto `tests/Api.Tests`, incluido en `Auto.slnx`):
 dotnet test Auto.slnx
 ```
 
+(por defecto compila en `Debug`; CI usa `--configuration Release` -- agrega esa flag si quieres reproducir exactamente lo que corre el pipeline)
+
 Frontend (Angular, `ng test` corre sobre vitest/jsdom):
 
 ```

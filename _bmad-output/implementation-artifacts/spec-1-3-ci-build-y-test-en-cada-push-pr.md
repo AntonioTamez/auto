@@ -10,6 +10,8 @@ context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-auto-2026-08-19/ARCHITECTURE-SPINE.md'
 ---
 
+> **Nota (2026-08-27, code review):** `status: 'done'` refleja que el ciclo de esta spec terminó, pero una tarea y un AC quedan intencionalmente sin cumplir -- **no** por un olvido: branch protection en `main` está bloqueada por el plan de GitHub (repos privados en Free no soportan required status checks), no por falta de implementación. Ver el ítem sin marcar en `## Tasks & Acceptance` y `deferred-work.md` para el detalle. La verificación manual "Revisar settings de branch protection" en `## Verification` fallará mientras esto siga sin resolverse.
+
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
 
 ## Intent
@@ -76,11 +78,21 @@ context:
 - Given un PR con `Api.Tests` o `ng test` fallando, when se intenta fusionar, then GitHub bloquea el merge hasta que el pipeline esté en verde.
 - Given `Auto.slnx`, when se ejecuta `dotnet build` localmente, then incluye `tests/Api.Tests` sin errores de referencia.
 
+### Review Findings
+
+- [x] [Review][Patch] Guard `if: !github.event.deleted` no tiene efecto real [`.github/workflows/ci.yml:16`] — confirmado empíricamente (push+delete de una rama de prueba): ningún run se dispara para un push que borra una rama, con o sin `branches: ['**']`, así que la condición nunca se evalúa contra un run real. **Aplicado:** guard eliminado de ambos jobs.
+- [x] [Review][Patch] Comando local de test en README no reproduce la config de CI [`README.md:40`] — `dotnet test Auto.slnx` local corre en `Debug`; CI usa `--configuration Release`. **Aplicado:** nota agregada aclarando la diferencia.
+- [x] [Review][Patch] `status: 'done'` en el frontmatter luce contradictorio junto a una tarea sin marcar y un AC sin cumplir [spec frontmatter] — el Acceptance Auditor señaló que, sin contexto, parece un olvido en vez de un bloqueo de plataforma ya documentado. **Aplicado:** nota aclaratoria agregada arriba del frontmatter.
+- [x] [Review][Defer] Terraform (`infra/terraform/`) sin ninguna validación en CI (`fmt`/`validate`/`tflint`) [`infra/terraform/`] — deferred, pre-existing (historia 1.2, no causado por esta historia)
+- [x] [Review][Defer] `cancel-in-progress: true` cancelará runs de `main` una vez que dispare CD real (historia 1.4), lo cual se ve igual que un fallo en Checks [`.github/workflows/ci.yml:10`] — deferred, sin consecuencia hoy
+- [x] [Review][Defer] Addendum al gap de branch protection ya registrado: el payload documentado fija `enforce_admins=false`, así que un admin podría fusionar en rojo una vez activado — deferred junto con la decisión de plan/visibilidad de GitHub
+
 ## Spec Change Log
 
 - 2026-08-24 -- Implementación ejecutada: `tests/Api.Tests` (xunit), `Auto.slnx` actualizado, `.github/workflows/ci.yml` (jobs `backend`/`frontend`), `README.md` actualizado. Branch protection en `main` **no** se activó (item Ask First del spec) -- requiere que un humano confirme el mecanismo (branch protection real vía `gh api`/UI) antes de mutar settings del repo real; ver README § CI para el paso manual documentado.
 - 2026-08-24 -- Code review: patches aplicados (`concurrency`, `permissions`, `timeout-minutes`, guard de rama borrada en `ci.yml`; `tests/Directory.Build.props` para eliminar duplicación de `TargetFramework`/`Nullable`; payload `gh api` completo en README). Sin `intent_gap`/`bad_spec`; 7 hallazgos reales no bloqueantes van a `deferred-work.md`.
 - 2026-08-24 -- Commit `d6c386a` pusheado a `main` (confirmado por el humano). `backend`/`frontend` corrieron en verde en GitHub. Intento de activar branch protection vía `gh api` bloqueado por el plan de GitHub (`403`, repos privados en Free no soportan required status checks) -- no es un gap de spec/código; queda como decisión pendiente del humano (GitHub Pro vs. repo público), documentada en README § CI y `deferred-work.md`.
+- 2026-08-27 -- `/bmad-code-review` (segunda pasada, 4 capas incl. Acceptance Auditor): 3 patches aplicados -- guard muerto `if: !github.event.deleted` eliminado de `ci.yml` (confirmado empíricamente: un push que borra una rama nunca dispara ningún run, con o sin `branches: ['**']`), nota de configuración `--configuration Release` agregada al comando de test local en README, y nota aclaratoria agregada arriba del frontmatter explicando por qué `status: 'done'` convive con una tarea/AC sin cumplir. 2 hallazgos reales no bloqueantes (Terraform sin cobertura de CI, semántica de `cancel-in-progress` sobre `main` de cara a la historia 1.4) y 1 addendum al gap de branch protection ya registrado (`enforce_admins`) van a `deferred-work.md`. Sin `intent_gap`/`bad_spec`.
 
 ## Design Notes
 

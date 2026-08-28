@@ -45,6 +45,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
   summary: Branch protection real en `main` (requerir los status checks `backend`/`frontend` antes de fusionar, AD-17) **bloqueada por el plan de GitHub**, no por falta de configuración — `gh api repos/AntonioTamez/auto/branches/main/protection` devuelve `403 "Upgrade to GitHub Pro or make this repository public to enable this feature"`. El plan Free no ofrece required status checks en repos privados.
   evidence: Intentado el 2026-08-24 después del primer push real (`backend`/`frontend` corrieron en verde, commit `d6c386a`, confirmado vía `gh api repos/AntonioTamez/auto/commits/d6c386a/check-runs`) — el payload ya era correcto (nombres de job confirmados por el humano), pero GitHub rechazó la llamada por el plan de la cuenta, no por un error de configuración. Hoy el pipeline corre y reporta en cada push/PR, pero **no bloquea el merge** — un PR con `backend`/`frontend` en rojo todavía se puede fusionar manualmente. Resolver cuando el humano decida entre actualizar a GitHub Pro o hacer el repo público (ambas opciones fueron explícitamente puestas sobre la mesa y rechazadas por ahora).
+  addendum (2026-08-27, code review): el payload documentado en `README.md` § CI fija `enforce_admins=false` y `required_pull_request_reviews=null` — cuando esto se active, un admin del repo aún podría fusionar con el pipeline en rojo (el `null` de reviews es irrelevante para AD-17, que solo exige status checks, no aprobación de código). Decidir la postura de `enforce_admins` junto con la decisión de plan/visibilidad de arriba, no antes.
 
 ## Deferred from: code review of story-1-3 (2026-08-24)
 
@@ -75,3 +76,13 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
   summary: `src/Api/Program.cs` usa top-level statements sin el marcador `public partial class Program { }` que necesita `WebApplicationFactory<Program>` para pruebas de integración.
   evidence: Hallazgo de code review (blind-hunter). Hoy no existe ninguna prueba de integración (solo el placeholder unitario de `Api.Tests`); agregar el marcador es trivial pero prematuro sin una prueba real que lo necesite — revisar cuando llegue la primera prueba de integración (candidata natural: historia 1.5, health-check end-to-end).
+
+## Deferred from: code review of story-1-3, segunda pasada (2026-08-27)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: El código Terraform de `infra/terraform/` (historia 1.2) no tiene ninguna validación automática en CI (`terraform fmt -check`/`terraform validate`, ni `tflint`) — "build y test en cada push/PR" hoy solo cubre .NET y Angular.
+  evidence: Hallazgo de code review (blind-hunter, segunda pasada). No es causado por esta historia -- el código Terraform ya existía sin cobertura de CI desde la historia 1.2, y el AC de la 1.3 solo exige compilar/probar backend y frontend. Revisar cuando el pipeline de CD (historia 1.4) empiece a consumir ese código con más frecuencia, o si un `terraform apply` real se rompe por un error que `validate` habría atrapado.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
+  summary: `concurrency.cancel-in-progress: true` en `ci.yml` cancelará un run en curso sobre `main` si llega un push más nuevo antes de que termine -- una vez que `main` dispare CD real (historia 1.4), un run cancelado se ve igual que un run fallido en la UI de Checks.
+  evidence: Hallazgo de code review (blind-hunter, segunda pasada). Hoy `main` no dispara ningún despliegue, así que no hay consecuencia real todavía; revisar la semántica de concurrency (o restringir `cancel-in-progress` a ramas no-`main`) al implementar la historia 1.4.

@@ -15,7 +15,6 @@ permissions:
 jobs:
   backend:
     name: backend
-    if: ${{ !github.event.deleted }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -35,7 +34,6 @@ jobs:
 
   frontend:
     name: frontend
-    if: ${{ !github.event.deleted }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
