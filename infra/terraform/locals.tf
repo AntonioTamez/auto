@@ -9,6 +9,8 @@ locals {
 
   resource_group_name            = "rg-${var.project_prefix}-${var.environment}"
   container_app_environment_name = "cae-${var.project_prefix}-${var.environment}"
+  log_analytics_workspace_name   = "log-${var.project_prefix}-${var.environment}"
+  container_app_name             = "ca-${var.project_prefix}-${var.environment}"
   static_web_app_name            = "swa-${var.project_prefix}-${var.environment}"
   communication_service_name     = "acs-${var.project_prefix}-${var.environment}"
 

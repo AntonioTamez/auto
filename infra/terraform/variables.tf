@@ -34,3 +34,19 @@ variable "project_prefix" {
     error_message = "project_prefix debe ser minúsculas/números, 1-8 caracteres (se interpola en storage_account_name, que exige 3-24 caracteres alfanuméricos en minúscula)."
   }
 }
+
+variable "api_container_image" {
+  description = <<-EOT
+    Imagen completa (repo:tag) que el Container App de la API va a correr,
+    ej. ghcr.io/antoniotamez/auto-api:<sha>. Sin default a propósito: el
+    tag lo decide el workflow de CD (cd-dev.yml) con el SHA real del commit
+    que se está desplegando -- Terraform no debe inferir ni hardcodear un
+    tag de imagen.
+  EOT
+  type        = string
+
+  validation {
+    condition     = can(regex("^.+:.+$", var.api_container_image))
+    error_message = "api_container_image debe incluir repo y tag explícitos (formato repo:tag), ej. ghcr.io/antoniotamez/auto-api:abc1234."
+  }
+}

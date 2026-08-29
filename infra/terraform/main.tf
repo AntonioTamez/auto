@@ -28,11 +28,64 @@ resource "azurerm_resource_group" "main" {
   tags     = local.common_tags
 }
 
-resource "azurerm_container_app_environment" "main" {
-  name                = local.container_app_environment_name
+# azurerm ~> 4.0 exige log_analytics_workspace_id en la Environment (no es
+# opcional en esta major, a diferencia de versiones futuras del provider) --
+# gap de la historia 1.2 que cierra esta historia (1.4).
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = local.log_analytics_workspace_name
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
   tags                = local.common_tags
+}
+
+resource "azurerm_container_app_environment" "main" {
+  name                       = local.container_app_environment_name
+  location                   = azurerm_resource_group.main.location
+  resource_group_name        = azurerm_resource_group.main.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  tags                       = local.common_tags
+}
+
+# Container App de la API. Consumption plan (sin workload_profile block),
+# min_replicas = 0 (scale-to-zero, ver spine AD-12 / Design Notes de esta
+# historia). Sin bloque `registry`: la imagen (ghcr.io/antoniotamez/auto-api)
+# es pública, no requiere credenciales de pull.
+resource "azurerm_container_app" "api" {
+  name                         = local.container_app_name
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  resource_group_name          = azurerm_resource_group.main.name
+  revision_mode                = "Single"
+  tags                         = local.common_tags
+
+  template {
+    min_replicas = 0
+    max_replicas = 1
+
+    container {
+      name   = "api"
+      image  = var.api_container_image
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      env {
+        name  = "ASPNETCORE_ENVIRONMENT"
+        value = "Production"
+      }
+    }
+  }
+
+  # target_port 8080 coincide con ASPNETCORE_HTTP_PORTS en src/Api/Dockerfile.
+  ingress {
+    external_enabled = true
+    target_port      = 8080
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
 }
 
 resource "azurerm_static_web_app" "main" {

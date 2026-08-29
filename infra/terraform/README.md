@@ -142,9 +142,12 @@ historia solo verifica que el módulo sea válido y planeable.
 | `environment` | _(ninguno, requerida)_ | `dev`, `staging` o `prod`. Sin default a propósito. |
 | `location` | `mexicocentral` | Región de Azure. |
 | `project_prefix` | `auto` | Prefijo de nombre de proyecto en todos los recursos. |
+| `api_container_image` | _(ninguno, requerida)_ | Imagen completa (repo:tag) que corre el Container App de la API, ej. `ghcr.io/antoniotamez/auto-api:<sha>`. La pasa `cd-dev.yml`, nunca hardcodeada. |
 
 ## Outputs
 
 Ver `outputs.tf` — ids/hostnames de cada recurso, consumidos por la
 historia 1.4 (CD) para desplegar la API (.NET) y el build de Angular sin
-tener que re-derivarlos.
+tener que re-derivarlos. Incluye `container_app_fqdn` (FQDN público de la
+API, agregado en la historia 1.4 -- lo consumirá el health-check de la
+historia 1.5).

@@ -13,6 +13,11 @@ output "container_app_environment_default_domain" {
   value       = azurerm_container_app_environment.main.default_domain
 }
 
+output "container_app_fqdn" {
+  description = "FQDN público del Container App de la API -- lo necesita la historia 1.5 para el health-check end-to-end."
+  value       = azurerm_container_app.api.ingress[0].fqdn
+}
+
 output "static_web_app_id" {
   description = "ID de la Static Web App donde la historia 1.4 desplegará el build de Angular."
   value       = azurerm_static_web_app.main.id

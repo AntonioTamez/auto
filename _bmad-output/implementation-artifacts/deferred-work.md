@@ -86,3 +86,43 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-3-ci-build-y-test-en-cada-push-pr.md`
   summary: `concurrency.cancel-in-progress: true` en `ci.yml` cancelará un run en curso sobre `main` si llega un push más nuevo antes de que termine -- una vez que `main` dispare CD real (historia 1.4), un run cancelado se ve igual que un run fallido en la UI de Checks.
   evidence: Hallazgo de code review (blind-hunter, segunda pasada). Hoy `main` no dispara ningún despliegue, así que no hay consecuencia real todavía; revisar la semántica de concurrency (o restringir `cancel-in-progress` a ramas no-`main`) al implementar la historia 1.4.
+
+## Deferred from: build workflow of story-1-4 (2026-08-28)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `src/Api/Program.cs` sigue usando `UseHttpsRedirection()` sin `UseForwardedHeaders`, tal como ya lo advertía el deferred item de la historia 1.1 ("revisar en la historia 1.4, CD a dev") -- ahora que la API corre detrás del reverse proxy de Azure Container Apps (TLS terminado en el borde, tráfico interno hacia el contenedor sobre HTTP en `target_port 8080`), ese redirect puede apuntar a un esquema/puerto que el cliente no puede alcanzar.
+  evidence: No se tocó `Program.cs` en esta historia porque el Code Map del spec no lo incluye (solo Dockerfile, Terraform, workflow, staticwebapp.config.json y README) y modificarlo sería lógica de negocio/composición fuera del alcance declarado ("Never": sin lógica de negocio nueva). El AC "la API responde" se cumple igual (la conexión HTTP llega y el pipeline de middleware responde, aunque sea con un 307 mal dirigido o un 404 -- no hay endpoints mapeados fuera de `IsDevelopment()`), pero no es una verificación funcional fuerte. Revisar junto con la historia 1.5 (health-check), que es la primera que necesita una respuesta 200 real.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `infra/terraform/README.md` documenta las tablas de Variables y Outputs del módulo, pero no se actualizaron con la nueva variable `api_container_image` ni el nuevo output `container_app_fqdn` agregados por esta historia.
+  evidence: Ese archivo no está en el Code Map del spec (que solo lista `main.tf`, `variables.tf`, `outputs.tf`). Las tablas de ese README ahora están desactualizadas respecto al código real del módulo; revisar la próxima vez que se toque `infra/terraform/README.md` o antes de onboardear a alguien nuevo al módulo.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `azurerm_container_app.api` fija `max_replicas = 1` -- valor no especificado por el spec (que solo fija `min_replicas = 0`) y elegido como default conservador de costo para dev.
+  evidence: Decisión de implementación tomada sin confirmación explícita del humano. Si el ambiente dev necesita absorber más de una réplica concurrente (pruebas de carga, demos), revisar este valor.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `src/Api/Dockerfile` usa tags flotantes (`mcr.microsoft.com/dotnet/sdk:10.0`, `mcr.microsoft.com/dotnet/aspnet:10.0`) en vez de pinnear por digest, y `.github/workflows/cd-dev.yml` fija las GitHub Actions de terceros solo por tag de major (`@v3`/`@v4`/`@v7`/`@v1`), no por SHA de commit.
+  evidence: Mismo patrón/decisión de postura ya diferida para `ci.yml` en la historia 1.3 ("Las Actions de terceros... están fijadas solo a tag de versión mayor") -- se mantiene consistencia entre ambos workflows en vez de pinnear solo este. Tratar como política transversal de supply-chain a decidir junto con ese ítem, no como parche aislado de esta historia.
+
+## Deferred from: code review of story-1-4 (2026-08-28)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `azurerm_container_app.api` no tiene ningún `identity` block ni variables/secrets de conexión a Postgres/Storage/Communication Service -- los gaps ya registrados en la historia 1.2 ("sin estrategia de identidad administrada... revisar en la historia 1.4 (CD)" y "sin regla de firewall/red hacia Postgres... revisar en la historia 1.4") siguen abiertos.
+  evidence: Hallazgo de code review (blind-hunter). Explícitamente fuera de alcance por el `Never` congelado del spec de esta historia ("no se conecta la API real a Postgres/Storage/Communication Service"): 1.4 solo prueba que el pipeline despliega el esqueleto, no que la app tenga lógica de negocio. Revisar en la primera historia que necesite que la API lea/escriba datos reales (Epic 2 en adelante).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: El GitHub Environment `dev` no tiene "required reviewers" configurados -- nada exige aprobación humana entre disparar `workflow_dispatch` y que `terraform apply -auto-approve` corra contra Azure real.
+  evidence: Hallazgo de code review (blind-hunter). Agregar required reviewers es un cambio de configuración del repositorio (Settings → Environments → dev) que requiere confirmación humana explícita, igual que branch protection -- no se activó sin preguntar. Revisar si el ritmo de deploys a dev amerita ese gate adicional.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `azurerm_container_app.api` no define ningún `probe` (liveness/readiness).
+  evidence: Hallazgo de code review (blind-hunter/edge-case-hunter). No existe todavía un endpoint `/health` real contra el cual definir un probe con sentido (el scaffold no mapea rutas fuera de `IsDevelopment()`) -- agregar uno ahora sería apuntar a `/` sin semántica clara. Revisar en la historia 1.5, que agrega el health-check real.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `azurerm_static_web_app.main` no tiene un backend enlazado (`/api/*`) hacia `azurerm_container_app.api` -- el deploy deja dos apps independientes (Angular y la API) en vez de una integración enrutada.
+  evidence: Hallazgo de code review (blind-hunter). Decidir entre "linked backend" de Azure Static Web Apps vs. llamadas CORS directas desde Angular a la API es una decisión de arquitectura que afecta configuración de CORS y URLs base en Angular -- corresponde a la historia 1.5, que hace la primera llamada real de Angular a la API (health-check end-to-end).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `cd-dev.yml` no usa cache de capas de Docker (`cache-from`/`cache-to` en `docker/build-push-action`) -- cada disparo manual hace un build completo desde cero pese a que el propio Dockerfile está diseñado con una capa de restore cacheable.
+  evidence: Hallazgo de code review (blind-hunter). Solo afecta tiempo de pipeline, no corrección -- revisar si el tiempo de build se vuelve una fricción real para disparos frecuentes.

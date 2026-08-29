@@ -87,3 +87,61 @@ gh api repos/AntonioTamez/auto/branches/main/protection \
   -F 'required_pull_request_reviews=null' \
   -F 'restrictions=null'
 ```
+
+## CD (dev)
+
+`.github/workflows/cd-dev.yml` despliega el esqueleto completo (API + Angular
++ infraestructura Terraform) al ambiente `dev` en Azure. Es **manual
+únicamente** (`workflow_dispatch`, AD-17/AD-18) -- nunca corre por push ni
+PR, y nunca toca `staging`/`prod` (ese workflow no existe todavía).
+
+### Prerequisitos (ya resueltos, no se repiten en el workflow)
+
+Lo siguiente ya se configuró manualmente fuera de este repo y el workflow
+solo lo *consume*, nunca lo crea:
+
+- Bootstrap del state remoto de Terraform (`rg-auto-tfstate`,
+  `stautotfstate`, contenedor `tfstate` -- ver `infra/terraform/README.md`).
+- Autenticación Azure vía OIDC federado: App Registration
+  `gh-actions-auto-cd`, federated credential
+  `repo:AntonioTamez/auto:environment:dev`, rol `Contributor` en la
+  suscripción + `Storage Blob Data Contributor` en `stautotfstate`.
+- GitHub Environment `dev` con los secrets `AZURE_CLIENT_ID`,
+  `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+
+### Cómo disparar el deploy manual
+
+Desde la UI de Actions: pestaña **Actions** → workflow **CD (dev)** → **Run
+workflow** (rama a desplegar, normalmente `main` con CI en verde).
+
+Desde la CLI:
+
+```
+gh workflow run cd-dev.yml
+```
+
+El workflow construye y publica la imagen de la API en GHCR
+(`ghcr.io/antoniotamez/auto-api:<sha>`, pública -- ver Design Notes de
+`spec-1-4` sobre por qué no se usa un PAT), corre `terraform apply` real
+contra el resource group `rg-auto-dev`, y despliega el build de Angular al
+Static Web App resultante.
+
+### Hiccup esperado en el primer disparo (bootstrap de GHCR)
+
+La primera vez que `cd-dev.yml` corre, el paquete `auto-api` no existe
+todavía en GHCR -- el push de la imagen lo crea, pero **como paquete
+privado** por default. `terraform apply` puede entonces fallar al
+aprovisionar el Container App porque no puede hacer pull de una imagen
+privada sin credenciales (el Container App se define sin bloque
+`registry`, a propósito, porque la imagen debe ser pública).
+
+Si esto pasa:
+
+1. GitHub → tu perfil/org → **Packages** → `auto-api` → **Package
+   settings** → cambiar visibilidad a **Public**.
+2. Volver a disparar el mismo workflow (`gh workflow run cd-dev.yml` o
+   **Re-run jobs** desde la UI). `terraform apply` es idempotente -- no
+   hay efectos secundarios por repetirlo.
+
+Este es un evento único: una vez que el paquete es público, disparos
+subsecuentes no lo vuelven a pedir.

@@ -1,0 +1,14 @@
+# Contexto de build de src/Api/Dockerfile = raíz del repo (COPY src/...).
+# Excluye todo lo que no es necesario para restore/publish de la API, para
+# mantener el contexto de build chico y evitar invalidar la cache de capas
+# de Docker por cambios ajenos al backend.
+.git/
+.github/
+_bmad-output/
+_bmad/
+infra/
+web/
+**/bin
+**/obj
+tests/
+docs/
