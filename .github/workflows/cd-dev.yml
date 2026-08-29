@@ -165,7 +165,6 @@ jobs:
           app_location: web/dist/web/browser
           output_location: ''
           skip_app_build: true
-          config_file_location: web/dist/web/browser
 
       # Code review: nada verificaba antes que el esqueleto quedara
       # realmente alcanzable -- este check tolera cold-start (min_replicas=0)
