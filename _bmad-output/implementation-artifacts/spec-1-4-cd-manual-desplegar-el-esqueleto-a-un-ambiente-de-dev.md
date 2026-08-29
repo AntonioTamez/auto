@@ -102,6 +102,9 @@ context:
 
 ## Spec Change Log
 
+- 2026-08-29 -- Primer disparo real de `cd-dev.yml` (run 33229190090) falló en `azure/login`: el subject claim que GitHub presenta realmente es `repo:{owner}@{owner_id}/{repo}@{repo_id}:environment:dev` (con IDs numéricos), no `repo:{owner}/{repo}:environment:dev` como se configuró originalmente. **Aplicado:** federated credential actualizada al subject real (`repo:AntonioTamez@4588583/auto@1339795123:environment:dev`) vía `az ad app federated-credential update`.
+- 2026-08-29 -- Segundo disparo (run 33229283273) pasó el login pero `terraform apply` falló: **`mexicocentral` no soporta `Microsoft.App/managedEnvironments` (Container Apps) ni `Microsoft.Web/staticSites` (Static Web Apps)** -- 2 de los 5 recursos del spine, error 400 `LocationNotAvailableForResourceType` de la API de Azure. La historia 1.2 nunca lo detectó porque solo corrió `terraform plan`, nunca un `apply` real contra esos tipos de recurso. Alcanzó a crear 4 recursos reales (resource group, Postgres, Storage, Log Analytics, Communication Service) antes de fallar. **Aplicado (decisión del humano):** `az group delete rg-auto-dev` para limpiar el ambiente parcial (sin datos reales, costo mínimo); `location` default cambiado de `mexicocentral` a `centralus` en `variables.tf` (soporta los 7 tipos de recurso); tabla de `infra/terraform/README.md` actualizada. El próximo `terraform apply` recreará todo desde cero en `centralus` -- el state remoto se auto-corrige vía refresh (no se tocó `dev.tfstate` manualmente, no tengo permisos de blob-data con mi cuenta personal, solo el service principal de CI los tiene).
+
 ## Design Notes
 
 **Por qué `min_replicas = 0`:** coincide con la decisión de arquitectura ("Container Apps consumption/scale-to-zero") y minimiza costo en un ambiente de dev que no necesita estar siempre caliente -- el primer request después de estar en cero paga un cold-start, aceptable para este ambiente.

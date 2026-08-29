@@ -14,13 +14,20 @@ variable "environment" {
 }
 
 variable "location" {
-  description = "Región de Azure donde se crean todos los recursos. Fija en mexicocentral (costo equivalente a South Central US, mejor latencia/residencia para Monterrey)."
+  description = <<-EOT
+    Región de Azure donde se crean todos los recursos. Fija en centralus --
+    NO mexicocentral (decisión original de la historia 1.2): la historia 1.4
+    descubrió en el primer `terraform apply` real que mexicocentral no
+    soporta 'Microsoft.App/managedEnvironments' (Container Apps) ni
+    'Microsoft.Web/staticSites' (Static Web Apps), dos de los 5 recursos
+    del spine. centralus soporta los 7 tipos de recurso del módulo.
+  EOT
   type        = string
-  default     = "mexicocentral"
+  default     = "centralus"
 
   validation {
     condition     = can(regex("^[a-z0-9]+$", var.location))
-    error_message = "location debe ser un nombre de región de Azure válido (minúsculas/números, sin espacios ni guiones, ej. mexicocentral)."
+    error_message = "location debe ser un nombre de región de Azure válido (minúsculas/números, sin espacios ni guiones, ej. centralus)."
   }
 }
 

@@ -140,7 +140,7 @@ historia solo verifica que el módulo sea válido y planeable.
 | Nombre | Default | Descripción |
 | --- | --- | --- |
 | `environment` | _(ninguno, requerida)_ | `dev`, `staging` o `prod`. Sin default a propósito. |
-| `location` | `mexicocentral` | Región de Azure. |
+| `location` | `centralus` | Región de Azure. `mexicocentral` no soporta Container Apps ni Static Web Apps (descubierto en el primer `terraform apply` real, historia 1.4) -- ver comentario en `variables.tf`. |
 | `project_prefix` | `auto` | Prefijo de nombre de proyecto en todos los recursos. |
 | `api_container_image` | _(ninguno, requerida)_ | Imagen completa (repo:tag) que corre el Container App de la API, ej. `ghcr.io/antoniotamez/auto-api:<sha>`. La pasa `cd-dev.yml`, nunca hardcodeada. |
 
