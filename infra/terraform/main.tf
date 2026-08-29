@@ -111,8 +111,16 @@ resource "azurerm_postgresql_flexible_server" "main" {
   # Un cambio a project_prefix/environment (o drift del sufijo aleatorio)
   # cambia el nombre y fuerza un destroy+recreate; esto protege los datos
   # reales de una recreación accidental (review de código, historia 1.2).
+  #
+  # ignore_changes = [zone]: Azure asigna la zona de disponibilidad
+  # automáticamente al crear el servidor (no la fijamos en config); sin este
+  # ignore, Terraform intenta "corregir" ese valor computado en applies
+  # subsecuentes y Azure lo rechaza (zone solo puede cambiar intercambiando
+  # con high_availability.standby_availability_zone) -- descubierto en el
+  # primer apply real, historia 1.4.
   lifecycle {
     prevent_destroy = true
+    ignore_changes  = [zone]
   }
 }
 
