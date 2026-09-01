@@ -127,6 +127,11 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           token=$(terraform output -raw static_web_app_api_key)
+          # Code review (segunda pasada): falla rápido con un mensaje claro
+          # si el output vino vacío (state parcial/output inesperado) en vez
+          # de dejar que el deploy de la SWA falle más adelante de forma
+          # confusa con un token vacío.
+          [ -n "$token" ] || { echo "::error::static_web_app_api_key vino vacío -- revisar el terraform apply anterior"; exit 1; }
           echo "::add-mask::$token"
           {
             echo "token<<SWA_TOKEN_EOF"
@@ -153,8 +158,16 @@ jobs:
       # navigationFallback (SPA routing) solo lo respeta Azure Static Web
       # Apps si el config vive junto al contenido desplegado, no en la raíz
       # del repo -- ver web/staticwebapp.config.json.
+      #
+      # Code review (segunda pasada): chequeo explícito antes del cp -- un
+      # cambio de nombre del proyecto Angular o de la config del builder
+      # rompería este path silenciosamente con un error genérico de cp; esto
+      # da un mensaje claro apuntando a la causa real.
       - name: Copy staticwebapp.config.json into build output
-        run: cp web/staticwebapp.config.json web/dist/web/browser/staticwebapp.config.json
+        run: |
+          test -d web/dist/web/browser \
+            || { echo "::error::web/dist/web/browser no existe -- ¿cambió el nombre del proyecto Angular o la config del builder?"; exit 1; }
+          cp web/staticwebapp.config.json web/dist/web/browser/staticwebapp.config.json
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
@@ -166,12 +179,16 @@ jobs:
           output_location: ''
           skip_app_build: true
 
-      # Code review: nada verificaba antes que el esqueleto quedara
-      # realmente alcanzable -- este check tolera cold-start (min_replicas=0)
-      # y cualquier respuesta HTTP (incluye redirects/404 del scaffold sin
-      # endpoints reales todavía); solo falla si la conexión nunca se
-      # establece, que es la señal real de un target_port mal configurado.
-      - name: Smoke check -- Container App reachable
+      # Code review (segunda pasada): el check original solo verificaba que
+      # la conexión TCP/TLS se estableciera (curl sin --fail), así que un
+      # 502 del ingress -- justo la señal de un target_port mal configurado
+      # -- contaba igual que un 404 legítimo del scaffold. Ahora inspecciona
+      # el status code: tolera cualquier respuesta de la app (incluye
+      # 3xx/4xx del scaffold sin endpoints reales todavía) pero rechaza
+      # 502/503/504 (error de ingress/gateway, la app nunca respondió).
+      # También verifica el Static Web App, no solo la API (AC de esta
+      # historia: "el sitio carga").
+      - name: Smoke check -- API and Static Web App reachable
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           fqdn=$(terraform output -raw container_app_fqdn)
@@ -183,9 +200,20 @@ jobs:
             echo "- API (Container App): https://$fqdn"
             echo "- Web (Static Web App): https://$swa_host"
           } >> "$GITHUB_STEP_SUMMARY"
-          # Sin --fail: cualquier respuesta HTTP (incluidos 3xx/4xx) cuenta
-          # como "alcanzable" -- solo un fallo de conexión (refused/timeout)
-          # hace que curl salga con código != 0 aquí.
-          curl --retry 5 --retry-connrefused --retry-delay 10 \
-            --max-time 15 -sS -o /dev/null "https://$fqdn" \
-            || { echo "::error::No se pudo establecer conexión con el Container App -- revisar target_port vs ASPNETCORE_HTTP_PORTS"; exit 1; }
+
+          check_reachable() {
+            local url="$1" label="$2" code
+            code=$(curl --retry 5 --retry-connrefused --retry-delay 10 \
+              --max-time 15 -sS -o /dev/null -w "%{http_code}" "$url") \
+              || { echo "::error::No se pudo establecer conexión con $label ($url)"; exit 1; }
+            case "$code" in
+              502|503|504)
+                echo "::error::$label respondió $code (error de ingress/gateway, no de la app) -- revisar target_port vs ASPNETCORE_HTTP_PORTS ($url)"
+                exit 1
+                ;;
+            esac
+            echo "$label respondió HTTP $code"
+          }
+
+          check_reachable "https://$fqdn" "Container App"
+          check_reachable "https://$swa_host" "Static Web App"

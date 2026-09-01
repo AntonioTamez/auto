@@ -130,3 +130,49 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
   summary: Un `terraform apply` que falla a mitad de la creación de `azurerm_container_app.api` deja el recurso registrado en Azure con `provisioningState: Failed`, pero Terraform nunca lo guarda en su state (la API nunca confirmó éxito) -- el siguiente `apply` intenta crearlo de nuevo y Azure responde "ya existe, debe importarse", bloqueando el deploy hasta borrar el objeto manualmente (`az containerapp delete`).
   evidence: Ocurrió 3 veces durante los intentos reales de esta historia (runs 33230451479, 33232144371), cada vez que el Container App falló por un motivo distinto (imagen privada). No hay ningún paso automático que detecte o limpie este estado -- solo se resolvió manualmente vía CLI. Relevante para la historia 1.6 ("destruir el ambiente de dev bajo demanda"): ese workflow debería considerar `terraform apply` fallidos que dejan recursos huérfanos sin reflejarse en el state, no solo el caso feliz de `terraform destroy` sobre un state limpio.
+
+## Deferred from: code review of story-1-4 (2026-08-29)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: Sin scan de vulnerabilidades de imagen (Trivy/Grype) entre el build de la imagen de la API y el push a GHCR.
+  evidence: Hallazgo de code review (blind-hunter). Mismo bucket que el pinning de Actions/base images ya diferido en la historia 1.3 -- tratar como política transversal de supply-chain, no como parche aislado de esta historia.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `src/Api/Dockerfile` no fija un `USER` no-root explícito -- depende implícitamente del default de la imagen base `mcr.microsoft.com/dotnet/aspnet:10.0`.
+  evidence: Hallazgo de code review (blind-hunter). Hardening de contenedor razonable pero sin urgencia mientras el scaffold no maneje datos reales (sin lógica de negocio todavía, mismo `Never` congelado del spec de esta historia).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `dotnet restore` en el Dockerfile corre sin `--locked-mode` ni `packages.lock.json` -- dos builds del mismo commit podrían resolver versiones de paquete NuGet distintas con el tiempo, lo que debilita la garantía de "tag `:sha` inmutable".
+  evidence: Hallazgo de code review (blind-hunter). Cambio de configuración de build/dependencias que corresponde a una historia de CI o de gestión de dependencias, no a esta de CD.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: Sin política de retención/limpieza de tags `:sha` en GHCR -- cada disparo manual publica un tag inmutable nuevo sin expiración, el almacenamiento del paquete crece sin límite.
+  evidence: Hallazgo de code review (blind-hunter). Costo operativo a monitorear, no bloqueante mientras el ritmo de deploys a dev sea bajo.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: Sin runbook de rollback documentado para un deploy malo -- el I/O matrix del spec ya acepta "no hay rollback automático, re-disparar el workflow" pero no da los pasos para revertir a un `:sha` anterior conocido-bueno mientras se prepara un fix.
+  evidence: Hallazgo de code review (blind-hunter). Documentación operativa, revisar si la frecuencia de deploys a dev lo amerita.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: El nuevo `azurerm_log_analytics_workspace.main` no tiene documentado cómo consultarlo para debug (`az containerapp logs show`, query de ejemplo) -- el recurso existe pero su uso no es descubrible para quien depure un deploy fallido.
+  evidence: Hallazgo de code review (blind-hunter). Documentación operativa.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `terraform plan` no se guarda como artifact del workflow (`actions/upload-artifact`) -- el único registro de qué se estaba por aplicar contra Azure real vive en los logs efímeros del job.
+  evidence: Hallazgo de code review (blind-hunter). Trazabilidad/auditoría, no bloqueante para el flujo actual de un solo operador.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: Sin notificación de fallo (Slack/Teams/GitHub issue) cuando el job de deploy falla -- combinado con `cancel-in-progress: false` y el re-disparo manual como único camino de recuperación, un dispatch fallido puede pasar desapercibido hasta que alguien revise la pestaña Actions.
+  evidence: Hallazgo de code review (blind-hunter). Observabilidad operativa.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: `web/staticwebapp.config.json` define `navigationFallback` pero no `globalHeaders` (CSP, `X-Content-Type-Options`, `X-Frame-Options`).
+  evidence: Hallazgo de code review (blind-hunter). Hardening razonable de agregar cuando el scaffold tenga contenido/lógica real, no bloqueante para un sitio sin datos todavía.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: El `concurrency` group `cd-dev` (`cancel-in-progress: false`) puede descartar silenciosamente un dispatch ya encolado si llega un tercero antes de que termine el primero -- comportamiento estándar de GitHub Actions, solo se conserva el run encolado más reciente.
+  evidence: Hallazgo de code review (edge-case-hunter). Bajo riesgo dado que los deploys son manuales e infrecuentes.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
+  summary: Nada en `cd-dev.yml` verifica programáticamente que CI esté verde para el SHA desplegado antes de `terraform apply` -- solo `if: github.ref == 'refs/heads/main'`.
+  evidence: Decisión del humano (resolución del finding [Review][Decision] de esta pasada): el gate correcto es branch protection en `main` exigiendo los checks `backend`/`frontend` (ya documentado en README, sección "Branch protection"), no un step nuevo en el workflow. Deferred porque branch protection está bloqueado hoy por el plan Free de GitHub con repo privado -- activar en cuanto el plan lo permita.

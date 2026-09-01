@@ -76,8 +76,9 @@ terraform init \
 terraform fmt -check -recursive
 terraform validate
 
-# environment no tiene default a propósito: siempre debe pasarse explícito.
-terraform plan -var environment=dev
+# environment y api_container_image no tienen default a propósito: siempre
+# deben pasarse explícitos (api_container_image lo agrega la historia 1.4).
+terraform plan -var environment=dev -var api_container_image=ghcr.io/antoniotamez/auto-api:test
 ```
 
 > **Importante:** el `key=...` pasado a `-backend-config` debe coincidir
@@ -117,7 +118,7 @@ EOF
 
 # 2. Reinicializa contra ese backend local y corre el plan normalmente.
 terraform init -reconfigure
-terraform plan -var environment=dev
+terraform plan -var environment=dev -var api_container_image=ghcr.io/antoniotamez/auto-api:test
 
 # 3. Borra el override y vuelve a dejar el directorio apuntando al backend
 #    real parcial (sin aplicar nada, sin tocar providers.tf).
