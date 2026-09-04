@@ -1,0 +1,143 @@
+name: Destroy dev environment
+
+# Manual únicamente (AD-18): dev es efímero -- se crea y se destruye solo
+# vía workflow_dispatch, nunca automáticamente. Sin inputs a propósito: el
+# resource group y el blob de state están hardcodeados más abajo, para que
+# este workflow jamás pueda alcanzar staging/producción -- cambiar el
+# destino exige PR + code review, nunca un input de quien dispara.
+on:
+  workflow_dispatch:
+
+concurrency:
+  # Mismo group que cd-dev.yml: un destroy y un apply sobre rg-auto-dev/
+  # dev.tfstate nunca deben correr en paralelo. No se cancela un run en
+  # curso -- el siguiente dispatch se encola.
+  group: cd-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # Azure OIDC (azure/login)
+
+env:
+  # Hardcodeado a propósito -- ver comentario en `on:` arriba. NUNCA
+  # staging/prod ni ningún otro resource group.
+  DEV_RESOURCE_GROUP: rg-auto-dev
+  # Backend remoto real del state (mismos valores que cd-dev.yml / infra/terraform/README.md).
+  TF_STATE_STORAGE_ACCOUNT: stautotfstate
+  TF_STATE_CONTAINER: tfstate
+  TF_STATE_KEY: dev.tfstate
+
+jobs:
+  destroy-dev:
+    name: destroy-dev
+    # Mismo guard que cd-dev.yml:42 -- workflow_dispatch permite elegir
+    # cualquier rama; sin esto, alguien podría disparar el borrado real
+    # desde una rama con este YAML modificado sin pasar por code review.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 30
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # No usa `terraform destroy`: azurerm_postgresql_flexible_server.main
+      # y azurerm_storage_account.main tienen `prevent_destroy = true`
+      # (infra/terraform/main.tf) y ese booleano no puede condicionarse a
+      # var.environment. `az group delete` borra el resource group completo
+      # a nivel API de Azure -- cascada nativa sobre todo lo contenido, sin
+      # pasar por `prevent_destroy` (que solo protege terraform apply/plan).
+      - name: Delete dev resource group
+        id: delete_rg
+        run: |
+          set +e
+          rg_exists="$(az group exists --name "$DEV_RESOURCE_GROUP")"
+          rg_exists_rc=$?
+          set -e
+          if [ $rg_exists_rc -ne 0 ]; then
+            echo "::error::az group exists falló (exit $rg_exists_rc) comprobando $DEV_RESOURCE_GROUP -- no se puede decidir si hay algo que borrar"
+            exit 1
+          fi
+
+          if [ "$rg_exists" = "true" ]; then
+            echo "$DEV_RESOURCE_GROUP existe -- contenido antes de borrar:"
+            az resource list --resource-group "$DEV_RESOURCE_GROUP" -o table
+
+            echo "$DEV_RESOURCE_GROUP existe -- borrando..."
+            az group delete --name "$DEV_RESOURCE_GROUP" --yes
+
+            set +e
+            rg_exists_after="$(az group exists --name "$DEV_RESOURCE_GROUP")"
+            rg_exists_after_rc=$?
+            set -e
+            if [ $rg_exists_after_rc -ne 0 ]; then
+              echo "::error::az group exists falló (exit $rg_exists_after_rc) al reconfirmar el borrado de $DEV_RESOURCE_GROUP -- no se puede confirmar el resultado"
+              exit 1
+            fi
+            if [ "$rg_exists_after" = "true" ]; then
+              echo "::error::$DEV_RESOURCE_GROUP sigue existiendo después de az group delete"
+              exit 1
+            fi
+            echo "deleted=true" >> "$GITHUB_OUTPUT"
+            echo "$DEV_RESOURCE_GROUP borrado y confirmado (az group exists = false)"
+          else
+            echo "deleted=false" >> "$GITHUB_OUTPUT"
+            echo "$DEV_RESOURCE_GROUP no existe, nada que borrar"
+          fi
+
+      # El próximo cd-dev.yml debe partir de state vacío y recrear todo
+      # desde cero (incluyendo un nuevo sufijo aleatorio) -- consistente con
+      # "dev es efímero" (AD-18). Tolerante a que el blob ya no exista.
+      - name: Delete dev.tfstate blob
+        id: delete_blob
+        run: |
+          set +e
+          blob_show_output="$(az storage blob show \
+              --account-name "$TF_STATE_STORAGE_ACCOUNT" \
+              --container-name "$TF_STATE_CONTAINER" \
+              --name "$TF_STATE_KEY" \
+              --auth-mode login 2>&1)"
+          blob_show_rc=$?
+          set -e
+
+          if [ $blob_show_rc -eq 0 ]; then
+            az storage blob delete \
+              --account-name "$TF_STATE_STORAGE_ACCOUNT" \
+              --container-name "$TF_STATE_CONTAINER" \
+              --name "$TF_STATE_KEY" \
+              --auth-mode login
+            echo "blob_deleted=true" >> "$GITHUB_OUTPUT"
+            echo "$TF_STATE_KEY borrado del backend remoto"
+          elif echo "$blob_show_output" | grep -qi "BlobNotFound"; then
+            echo "blob_deleted=false" >> "$GITHUB_OUTPUT"
+            echo "$TF_STATE_KEY no existe en el backend remoto, nada que borrar"
+          else
+            echo "::error::az storage blob show falló (exit $blob_show_rc) comprobando $TF_STATE_KEY -- no se puede decidir si hay que borrarlo"
+            echo "$blob_show_output"
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Destroy dev environment"
+            echo "- Disparado por: **${{ github.actor }}** el $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+            if [ "${{ job.status }}" != "success" ]; then
+              echo "- Resultado: **fallo** -- revisar el log del job"
+            elif [ "${{ steps.delete_rg.outputs.deleted }}" = "true" ]; then
+              echo "- Resultado: **$DEV_RESOURCE_GROUP borrado** y confirmado (\`az group exists\` = false)"
+              if [ "${{ steps.delete_blob.outputs.blob_deleted }}" = "true" ]; then
+                echo "- \`$TF_STATE_KEY\` borrado del backend remoto"
+              else
+                echo "- \`$TF_STATE_KEY\` no existía en el backend remoto"
+              fi
+            else
+              echo "- Resultado: **nada que borrar** -- $DEV_RESOURCE_GROUP no existía"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

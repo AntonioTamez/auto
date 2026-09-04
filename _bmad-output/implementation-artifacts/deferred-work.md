@@ -228,3 +228,21 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
   summary: `Cors:AllowedOrigins` con un valor no vacío pero mal formado (falta el esquema, slash final) no se valida -- el chequeo actual solo cubre el caso `Length == 0`.
   evidence: Hallazgo de code review (edge-case-hunter). Sin evidencia de que el valor real (`azurerm_static_web_app.main.default_host_name`, prefijado con `https://` en Terraform) pueda llegar mal formado hoy; edge case especulativo, hardening razonable.
+
+## Deferred from: code review of story-1-6 (2026-09-04)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: `destroy-dev.yml` no loguea qué subscription/tenant de Azure quedó autenticado (`az account show`) antes de correr `az group delete` -- si `AZURE_SUBSCRIPTION_ID` estuviera mal configurado, el borrado correría silenciosamente contra la suscripción equivocada sin rastro en el log.
+  evidence: Hallazgo de code review (blind-hunter). Mismo App Registration/OIDC que `cd-dev.yml` (que tampoco loguea esto); tratar junto con cualquier hardening de auditoría transversal, no como parche aislado de esta historia.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: `az group delete` falla directo si `rg-auto-dev` tiene un Azure Resource Manager lock (`CanNotDelete`/`ReadOnly`) -- el workflow no detecta ni remueve locks antes de intentar el borrado, así que el único síntoma sería un error crudo de la CLI en el log en vez de un mensaje claro apuntando a la causa.
+  evidence: Hallazgo de code review (blind-hunter). Edge case sin evidencia de que hoy exista algún lock real sobre `rg-auto-dev`; revisar si alguna vez se agrega un lock de protección al resource group de dev.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: Si el job llega al timeout de 30 minutos a mitad de `az group delete`, el workflow no detecta ni reporta que el resource group pudo quedar parcialmente borrado -- el summary de fallo solo dice "revisar el log del job".
+  evidence: Hallazgo de code review (blind-hunter). Escenario especulativo (un `az group delete` real de este tamaño de recursos no debería acercarse a 30 minutos); revisar si algún run real llega a necesitar ese tiempo.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: El nombre hardcodeado `rg-auto-dev` no se cruza contra el tag `environment` real del resource group (`azurerm_resource_group.main` sí lo fija vía `local.common_tags`) antes de borrar -- protección adicional de defensa en profundidad contra un futuro drift en la convención de nombres de `locals.tf`.
+  evidence: Hallazgo de code review (blind-hunter). El nombre hardcodeado ya está protegido por PR+review (mismo mecanismo que protege `environment`/`TF_STATE_KEY`); este chequeo extra es hardening, no una brecha activa hoy.
