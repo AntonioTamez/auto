@@ -136,6 +136,43 @@ desde esta historia ni desde ningún CLI local de desarrollador (AD-17/AD-18)
 — el primer `apply` real ocurre vía pipeline en la historia 1.4. Esta
 historia solo verifica que el módulo sea válido y planeable.
 
+## Crear y destruir el ambiente de dev
+
+El ambiente de dev es efímero (AD-18): se crea y se destruye solo vía
+pipeline, nunca a mano ni automáticamente.
+
+- **Crear/actualizar** (`.github/workflows/cd-dev.yml`): build + push de la
+  imagen de la API, `terraform apply` real, deploy de Angular a la Static
+  Web App. Ver la sección "Bootstrap del state remoto" arriba para el
+  backend que este workflow usa.
+- **Destruir** (`.github/workflows/destroy-dev.yml`, historia 1.6): borra el
+  resource group `rg-auto-dev` completo y limpia el blob `dev.tfstate`, para
+  que el próximo `cd-dev.yml` parta de cero. Usa `az group delete` (API de
+  Azure) en vez de `terraform destroy`, porque
+  `azurerm_postgresql_flexible_server.main` y `azurerm_storage_account.main`
+  tienen `lifecycle { prevent_destroy = true }` (protección contra un
+  destroy+recreate accidental por drift de config) y ese booleano no puede
+  condicionarse a `var.environment` — ver el comentario en `main.tf` y el
+  spec de la historia 1.6 para el detalle completo.
+
+Ambos workflows son `workflow_dispatch` **sin inputs** — el ambiente/resource
+group objetivo queda hardcodeado en cada YAML, nunca elegible por quien
+dispara, para que ninguno de los dos pueda alcanzar staging/producción por
+accidente.
+
+**Cómo disparar cualquiera de los dos:**
+
+- **UI:** pestaña *Actions* del repo → seleccionar el workflow ("CD (dev)" o
+  "Destroy dev environment") → botón **Run workflow** → elegir la rama →
+  *Run workflow*.
+- **CLI:** `gh workflow run "Destroy dev environment" --ref main` (o
+  `"CD (dev)"` para el deploy).
+
+Ambos jobs tienen `if: github.ref == 'refs/heads/main'`: si se disparan
+eligiendo cualquier otra rama, el job aparece como "skipped" sin hacer nada
+— es la protección para que nadie corra una versión no revisada del
+workflow contra Azure real.
+
 ## Variables
 
 | Nombre | Default | Descripción |
