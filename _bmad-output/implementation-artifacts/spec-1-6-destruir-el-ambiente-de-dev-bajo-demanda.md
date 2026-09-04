@@ -59,7 +59,7 @@ context:
 
 **Execution:**
 - [x] `.github/workflows/destroy-dev.yml` -- crear `on: workflow_dispatch` (sin inputs), `if: github.ref == 'refs/heads/main'` en el job, `concurrency: {group: cd-dev, cancel-in-progress: false}`, `permissions: {contents: read, id-token: write}` -- base del job
-- [x] `.github/workflows/destroy-dev.yml` -- steps `actions/checkout`, `azure/login` (OIDC) -- autentica tanto el provider como `az` CLI para los pasos siguientes
+- [x] `.github/workflows/destroy-dev.yml` -- step `azure/login` (OIDC) -- autentica tanto el provider como `az` CLI para los pasos siguientes (sin `actions/checkout`: ningún step de este workflow lee archivos del repo)
 - [x] `.github/workflows/destroy-dev.yml` -- step que corre `az group exists --name rg-auto-dev`; si es `true`, corre `az group delete --name rg-auto-dev --yes` y reconfirma con `az group exists` que devuelva `false` (falla el job si sigue existiendo); si es `false`, lo reporta y continúa sin error
 - [x] `.github/workflows/destroy-dev.yml` -- step que borra el blob `dev.tfstate` (`az storage blob delete --account-name stautotfstate --container-name tfstate --name dev.tfstate --auth-mode login`), tolerante a que el blob no exista
 - [x] `.github/workflows/destroy-dev.yml` -- step final `if: always()` que escribe a `$GITHUB_STEP_SUMMARY` si el ambiente fue destruido o si el job falló
@@ -69,6 +69,23 @@ context:
 - Given `destroy-dev.yml`, when se inspecciona su definición, then no expone ningún input de `workflow_dispatch`, el resource group/blob de state están hardcodeados a `rg-auto-dev`/`dev.tfstate`, y el job solo corre si `github.ref == 'refs/heads/main'`.
 - Given `cd-dev.yml` corriendo, when se dispara `destroy-dev.yml` en paralelo, then ambos comparten `concurrency.group: cd-dev` y el segundo se encola.
 - Given un borrado exitoso, when termina el job, then el blob `dev.tfstate` ya no existe en el backend remoto.
+
+### Review Findings
+
+_Revisión bmad-code-review (2026-09-04) -- blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor._
+
+- [x] [Review][Patch] El step `Summary` nunca reporta si `dev.tfstate` se borró cuando el resource group no existía -- la rama `else` final solo imprime "nada que borrar", sin consultar `steps.delete_blob.outputs.blob_deleted`, contradiciendo la fila 2 del I/O Matrix ("limpia cualquier `dev.tfstate` residual si existe") y el propio texto del Suggested Review Order ("si el blob de state realmente se borró -- no lo asume") [destroy-dev.yml:140-141]
+- [x] [Review][Patch] Las Tasks & Acceptance de esta spec siguen marcando como hecho un step `actions/checkout` que no existe en el workflow (se quitó correctamente en una ronda de patch posterior porque nada lee archivos del repo) -- el checklist quedó desactualizado frente al código real [spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md: Tasks & Acceptance]
+- [x] [Review][Patch] `az storage blob show` + `grep -qi "BlobNotFound"` sobre el mensaje de error es más frágil que `az storage blob exists`, que devuelve un booleano limpio -- mismo patrón ya usado para `az group exists` en el step anterior [destroy-dev.yml:100-106]
+- [x] [Review][Defer] `az group delete` y `az resource list` fallando caen en un abort genérico de `set -e` en vez de un mensaje `::error::` propio, a diferencia del resto de las llamadas `az` en el mismo archivo [destroy-dev.yml:69,72] -- deferred, hardening de consistencia
+- [x] [Review][Defer] Un lease obsoleto sobre el blob `dev.tfstate` (de un `terraform apply`/`plan` interrumpido) haría fallar `az storage blob delete` con un error crudo sin explicación [destroy-dev.yml:109-113] -- deferred, edge case especulativo
+- [x] [Review][Defer] No hay confirmación de que la identidad OIDC compartida con `cd-dev.yml` tenga el rol RBAC (ej. Storage Blob Data Contributor) para las llamadas `az storage blob` de este workflow -- probablemente sí, dado que el backend de Terraform ya usa la misma identidad contra la misma storage account, pero no verificado para este path de CLI específico [destroy-dev.yml:100-119] -- deferred, riesgo bajo por precedente empírico
+- [x] [Review][Defer] `infra/terraform/README.md` no se actualizó para documentar `destroy-dev.yml` como la contraparte de destrucción del path de deploy [infra/terraform/README.md] -- deferred, documentación operativa
+- [x] [Review][Defer] El inventario de recursos (`az resource list`) previo al borrado solo vive en el log efímero del job, sin persistirse como artifact estructurado [destroy-dev.yml:69] -- deferred, trazabilidad/auditoría
+- [x] [Review][Defer] Los steps de bash no usan `set -u`/`pipefail` -- una variable mal escrita o inesperadamente vacía se expandiría silenciosamente en vez de fallar rápido [destroy-dev.yml:57-91,98-123] -- deferred, hardening especulativo
+- [x] [Review][Defer] Ningún workflow de este repo tiene lint automático (`actionlint`/`yamllint`) para YAML de GitHub Actions -- gap transversal preexistente, no causado por esta historia [.github/workflows/*.yml] -- deferred, política transversal
+- [x] [Review][Defer] El I/O & Edge-Case Matrix de la spec no documenta las filas de fallo de CLI (`az group exists`/`az storage blob show` devolviendo un error real) que la implementación sí maneja explícitamente -- el matrix quedó atrás de lo que realmente se construyó [spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md: I/O & Edge-Case Matrix] -- deferred, completitud de documentación
+- [x] [Review][Defer] Sin mensaje explicativo cuando el job se salta por el branch guard (dispatch desde una rama que no es `main`) -- mismo patrón que `cd-dev.yml`, no es una regresión de esta historia [destroy-dev.yml:37] -- deferred, mismo patrón preexistente
 
 ## Spec Change Log
 

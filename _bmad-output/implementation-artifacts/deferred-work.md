@@ -246,3 +246,41 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
   summary: El nombre hardcodeado `rg-auto-dev` no se cruza contra el tag `environment` real del resource group (`azurerm_resource_group.main` sí lo fija vía `local.common_tags`) antes de borrar -- protección adicional de defensa en profundidad contra un futuro drift en la convención de nombres de `locals.tf`.
   evidence: Hallazgo de code review (blind-hunter). El nombre hardcodeado ya está protegido por PR+review (mismo mecanismo que protege `environment`/`TF_STATE_KEY`); este chequeo extra es hardening, no una brecha activa hoy.
+
+## Deferred from: code review of story-1-6 (2026-09-04, revisión bmad-code-review)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: `az group delete` y `az resource list` fallando caen en un abort genérico de `set -e` en vez de un mensaje `::error::` propio, a diferencia del resto de las llamadas `az` en el mismo archivo (que sí tienen mensajes de error crafteados).
+  evidence: Hallazgo de code review (edge-case-hunter + blind-hunter). Inconsistencia de estilo/UX de logs, no un fallo silencioso -- `set -e` ya aborta el job en cualquier caso.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: Un lease obsoleto sobre el blob `dev.tfstate` (dejado por un `terraform apply`/`plan` interrumpido) haría fallar `az storage blob delete` con un error crudo de Azure sin explicación adicional.
+  evidence: Hallazgo de code review (blind-hunter). Edge case especulativo, sin evidencia de que hoy exista un lease obsoleto real sobre ese blob.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: No hay confirmación explícita de que la identidad OIDC compartida con `cd-dev.yml` tenga el rol RBAC (ej. Storage Blob Data Contributor) necesario para las llamadas `az storage blob` de este workflow.
+  evidence: Hallazgo de code review (blind-hunter). Riesgo bajo por precedente empírico -- el backend de Terraform de `cd-dev.yml` ya usa la misma identidad contra la misma storage account con éxito -- pero no verificado específicamente para el path de `az storage blob` CLI.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: `infra/terraform/README.md` no se actualizó para documentar `destroy-dev.yml` como la contraparte de destrucción del path de deploy (`cd-dev.yml`).
+  evidence: Hallazgo de code review (blind-hunter). Ese archivo no está en el Code Map de esta historia; documentación operativa, mismo patrón ya diferido para otras historias (1.4, 1.5) que tampoco tocaron ese README.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: El inventario de recursos (`az resource list`) logueado antes del borrado solo vive en el log efímero del job de GitHub Actions, sin persistirse como artifact estructurado (JSON/step summary).
+  evidence: Hallazgo de code review (blind-hunter). Trazabilidad/auditoría a más largo plazo que el retention window de los logs de Actions.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: Los steps de bash de `destroy-dev.yml` no usan `set -u`/`pipefail` -- una variable mal escrita o inesperadamente vacía se expandiría silenciosamente en vez de fallar rápido.
+  evidence: Hallazgo de code review (blind-hunter). Hardening especulativo; todas las variables usadas hoy están definidas explícitamente vía `env:`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: Ningún workflow de este repo (`ci.yml`, `cd-dev.yml`, `destroy-dev.yml`) tiene lint automático (`actionlint`/`yamllint`) para YAML de GitHub Actions.
+  evidence: Hallazgo de code review (blind-hunter). Gap transversal preexistente desde la historia 1.3, no causado por esta historia -- tratar como política de repo, no parche aislado.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: El I/O & Edge-Case Matrix de la spec no documenta las filas de fallo de CLI (`az group exists`/`az storage blob show` devolviendo un error real) que la implementación sí maneja explícitamente -- el matrix quedó atrás de la seguridad extra que realmente se construyó.
+  evidence: Hallazgo de code review (blind-hunter). Completitud de documentación, no un defecto de código -- el comportamiento implementado es más seguro de lo que el matrix describe, no menos.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
+  summary: Sin mensaje explicativo en el log cuando el job se salta por el branch guard (`if: github.ref == 'refs/heads/main'`) al dispararse desde una rama que no es `main`.
+  evidence: Hallazgo de code review (edge-case-hunter). Mismo patrón preexistente que `cd-dev.yml` (guard idéntico, mismo comportamiento de "skip" silencioso de GitHub Actions); no es una regresión de esta historia.

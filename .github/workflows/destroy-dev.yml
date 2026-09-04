@@ -97,15 +97,20 @@ jobs:
         id: delete_blob
         run: |
           set +e
-          blob_show_output="$(az storage blob show \
+          blob_exists="$(az storage blob exists \
               --account-name "$TF_STATE_STORAGE_ACCOUNT" \
               --container-name "$TF_STATE_CONTAINER" \
               --name "$TF_STATE_KEY" \
-              --auth-mode login 2>&1)"
-          blob_show_rc=$?
+              --auth-mode login \
+              --query exists -o tsv)"
+          blob_exists_rc=$?
           set -e
+          if [ $blob_exists_rc -ne 0 ]; then
+            echo "::error::az storage blob exists falló (exit $blob_exists_rc) comprobando $TF_STATE_KEY -- no se puede decidir si hay que borrarlo"
+            exit 1
+          fi
 
-          if [ $blob_show_rc -eq 0 ]; then
+          if [ "$blob_exists" = "true" ]; then
             az storage blob delete \
               --account-name "$TF_STATE_STORAGE_ACCOUNT" \
               --container-name "$TF_STATE_CONTAINER" \
@@ -113,13 +118,9 @@ jobs:
               --auth-mode login
             echo "blob_deleted=true" >> "$GITHUB_OUTPUT"
             echo "$TF_STATE_KEY borrado del backend remoto"
-          elif echo "$blob_show_output" | grep -qi "BlobNotFound"; then
+          else
             echo "blob_deleted=false" >> "$GITHUB_OUTPUT"
             echo "$TF_STATE_KEY no existe en el backend remoto, nada que borrar"
-          else
-            echo "::error::az storage blob show falló (exit $blob_show_rc) comprobando $TF_STATE_KEY -- no se puede decidir si hay que borrarlo"
-            echo "$blob_show_output"
-            exit 1
           fi
 
       - name: Summary
@@ -139,5 +140,10 @@ jobs:
               fi
             else
               echo "- Resultado: **nada que borrar** -- $DEV_RESOURCE_GROUP no existía"
+              if [ "${{ steps.delete_blob.outputs.blob_deleted }}" = "true" ]; then
+                echo "- \`$TF_STATE_KEY\` borrado del backend remoto"
+              else
+                echo "- \`$TF_STATE_KEY\` no existía en el backend remoto"
+              fi
             fi
           } >> "$GITHUB_STEP_SUMMARY"
