@@ -73,6 +73,29 @@ resource "azurerm_container_app" "api" {
         name  = "ASPNETCORE_ENVIRONMENT"
         value = "Production"
       }
+
+      # Origen permitido para CORS (Program.cs lee Cors:AllowedOrigins vía
+      # configuración) -- el host real de la SWA, conocido recién en este
+      # apply. Nunca AllowAnyOrigin en el ambiente desplegado (spec 1.5).
+      env {
+        name  = "Cors__AllowedOrigins__0"
+        value = "https://${azurerm_static_web_app.main.default_host_name}"
+      }
+
+      # Cierra el gap diferido explícitamente por la historia 1.4 ("sin
+      # probe... deferred a la historia 1.5"). Mismo puerto/path que el
+      # endpoint /health de Program.cs.
+      liveness_probe {
+        transport = "HTTP"
+        port      = 8080
+        path      = "/health"
+      }
+
+      readiness_probe {
+        transport = "HTTP"
+        port      = 8080
+        path      = "/health"
+      }
     }
   }
 

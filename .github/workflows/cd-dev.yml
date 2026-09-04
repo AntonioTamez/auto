@@ -139,6 +139,23 @@ jobs:
             echo "SWA_TOKEN_EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # El FQDN del Container App lo asigna Azure dinámicamente en este
+      # apply (incluye un sufijo aleatorio del Container App Environment) --
+      # no existe hasta ahora, así que no puede fijarse en el código fuente
+      # commiteado ni vía `fileReplacements` de Angular (ver Design Notes de
+      # spec 1.5). Se sobreescribe justo antes del build, con el FQDN real
+      # de este mismo despliegue.
+      - name: Inject real API FQDN into Angular environment
+        run: |
+          fqdn=$(terraform -chdir=${{ env.TF_WORKING_DIR }} output -raw container_app_fqdn)
+          [ -n "$fqdn" ] || { echo "::error::container_app_fqdn vino vacío -- revisar el terraform apply anterior"; exit 1; }
+          cat > web/src/environments/environment.ts <<EOF
+          export const environment = {
+            apiBaseUrl: 'https://$fqdn',
+          };
+          EOF
+          echo "web/src/environments/environment.ts actualizado con apiBaseUrl=https://$fqdn"
+
       # --- Build de Angular + deploy a Static Web App ----------------------
       - name: Setup Node.js (from web/.nvmrc)
         uses: actions/setup-node@v7

@@ -176,3 +176,29 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev.md`
   summary: Nada en `cd-dev.yml` verifica programáticamente que CI esté verde para el SHA desplegado antes de `terraform apply` -- solo `if: github.ref == 'refs/heads/main'`.
   evidence: Decisión del humano (resolución del finding [Review][Decision] de esta pasada): el gate correcto es branch protection en `main` exigiendo los checks `backend`/`frontend` (ya documentado en README, sección "Branch protection"), no un step nuevo en el workflow. Deferred porque branch protection está bloqueado hoy por el plan Free de GitHub con repo privado -- activar en cuanto el plan lo permita.
+
+## Deferred from: code review of story-1-5 (2026-09-03)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `src/Api/Program.cs` sigue llamando `app.UseHttpsRedirection()` sin `app.UseForwardedHeaders()` corriendo detrás del reverse proxy de Azure Container Apps -- el mismo gap flotante desde la historia 1.1, re-diferido en la 1.4 con la nota "revisar en la historia 1.5, que es la primera que necesita una respuesta 200 real".
+  evidence: Verificado con evidencia real: el Spec Change Log de la historia 1.4 documenta que el primer smoke-check real contra el FQDN respondió `404` directo (no un `307`), confirmando que `UseHttpsRedirection()` hace no-op (Kestrel no encuentra un puerto HTTPS configurado -- solo `ASPNETCORE_HTTP_PORTS=8080` -- y omite el redirect en vez de loopearlo). No es un bug funcional hoy, pero el código sigue siendo confuso/dead-weight; limpiar (`UseForwardedHeaders` o quitar `UseHttpsRedirection`) cuando se toque `Program.cs` por otra razón.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: Los bloques `liveness_probe`/`readiness_probe` de `azurerm_container_app.api` usan los defaults del provider (`initial_delay`, `interval_seconds`, `failure_count_threshold`) sin tuning explícito para el cold-start de `min_replicas = 0`.
+  evidence: Hallazgo de code review (blind-hunter). Un app mínimo de .NET 10 arranca en segundos, dentro de la ventana tolerada por los defaults -- bajo riesgo hoy, pero revisar si en el futuro el contenedor gana dependencias de arranque más lentas (conexión a Postgres, etc.).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: El estado `'error'` del shell de Angular no ofrece ningún mecanismo de reintento -- el health-check corre una sola vez en el constructor.
+  evidence: Hallazgo de code review (blind-hunter). Mejora de UX razonable, no bloqueante para el AC de esta historia (que solo pide mostrar el estado, éxito o error).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `GET /health` no fija `Cache-Control: no-store` (ni equivalente) -- una respuesta de estado podría quedar cacheada por un intermediario.
+  evidence: Hallazgo de code review (blind-hunter). Bajo riesgo hoy (sin CDN/proxy cacheando explícitamente JSON de API), hardening razonable para cuando el endpoint tenga un consumidor real de monitoreo.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: Sin documentación en el README del backend sobre el nuevo endpoint `/health`, la configuración `Cors:AllowedOrigins` necesaria para desarrollo local, ni la convención de que `environment.ts` se sobreescribe en CI.
+  evidence: Hallazgo de code review (blind-hunter). Documentación operativa/onboarding, no bloqueante.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: Los tests de Angular (`app.spec.ts`) solo simulan un fallo de red (`ProgressEvent('error')`) para el estado `'error'`, no un fallo HTTP real (ej. 500 con body) llegando al mismo callback.
+  evidence: Hallazgo de code review (blind-hunter). Mismo código/callback maneja ambos casos en RxJS (`subscribe.error`), así que la cobertura funcional ya existe indirectamente -- separar el escenario es un nice-to-have de test, no una brecha de comportamiento.

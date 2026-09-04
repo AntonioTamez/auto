@@ -1,1 +1,15 @@
 <h1>Hello, {{ title() }}</h1>
+
+<section class="health" [attr.data-status]="healthStatus()" role="status" aria-live="polite">
+  @switch (healthStatus()) {
+    @case ('loading') {
+      <p>Verificando estado de la API…</p>
+    }
+    @case ('ok') {
+      <p>API: {{ healthData()?.status }} ({{ healthData()?.timestamp }})</p>
+    }
+    @case ('error') {
+      <p>No se pudo conectar con la API.</p>
+    }
+  }
+</section>
