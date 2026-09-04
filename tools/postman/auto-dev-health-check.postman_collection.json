@@ -1,0 +1,139 @@
+{
+  "info": {
+    "name": "Auto - Health Check (dev)",
+    "description": "Verificación manual de la historia 1.5 (endpoint de health-check verificable de punta a punta) contra el ambiente dev real en Azure.\n\nIMPORTANTE: el ambiente dev es efímero (AD-18) -- cada vez que se destruye y se vuelve a desplegar, el FQDN del Container App y el host de la Static Web App cambian. Antes de correr esta colección, actualiza las variables `apiFqdn` y `swaHost` con los valores del deploy actual:\n- Desde el resumen del run de GitHub Actions (`CD (dev)` -> step \"Smoke check\"), o\n- `terraform -chdir=infra/terraform output -raw container_app_fqdn` / `static_web_app_default_host_name` (requiere el backend real inicializado).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "apiFqdn",
+      "value": "ca-auto-dev.delightfulpebble-e69bcabf.centralus.azurecontainerapps.io",
+      "description": "Valor del deploy vigente al 2026-09-04 -- actualízalo tras cada redeploy de dev."
+    },
+    {
+      "key": "swaHost",
+      "value": "calm-stone-05dcd0710.6.azurestaticapps.net",
+      "description": "Valor del deploy vigente al 2026-09-04 -- actualízalo tras cada redeploy de dev."
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /health (sin Origin)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://{{apiFqdn}}/health",
+          "protocol": "https",
+          "host": ["{{apiFqdn}}"],
+          "path": ["health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Body has status and timestamp', () => {",
+              "  const json = pm.response.json();",
+              "  pm.expect(json.status).to.eql('healthy');",
+              "  pm.expect(json.timestamp).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /health (Origin permitido = SWA)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "https://{{swaHost}}"
+          }
+        ],
+        "url": {
+          "raw": "https://{{apiFqdn}}/health",
+          "protocol": "https",
+          "host": ["{{apiFqdn}}"],
+          "path": ["health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Access-Control-Allow-Origin echoes the SWA origin', () => {",
+              "  pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql(pm.variables.get('swaHost') ? 'https://' + pm.variables.get('swaHost') : undefined);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /health (Origin NO permitido)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "https://evil.example.com"
+          }
+        ],
+        "url": {
+          "raw": "https://{{apiFqdn}}/health",
+          "protocol": "https",
+          "host": ["{{apiFqdn}}"],
+          "path": ["health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 (el servidor igual responde; el bloqueo es del navegador, no de Postman)', () => pm.response.to.have.status(200));",
+              "pm.test('Access-Control-Allow-Origin header is absent', () => {",
+              "  pm.expect(pm.response.headers.has('Access-Control-Allow-Origin')).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Static Web App (HTML del shell)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://{{swaHost}}/",
+          "protocol": "https",
+          "host": ["{{swaHost}}"],
+          "path": [""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Serves the Angular shell', () => pm.expect(pm.response.text()).to.include('app-root'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

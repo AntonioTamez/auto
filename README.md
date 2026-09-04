@@ -13,45 +13,43 @@ src/
 web/                 # Workspace Angular, independiente del backend (sin código compartido).
 ```
 
-## Build
+## Comandos
 
-Backend (desde la raíz del repo, vía la solución `Auto.slnx`):
+Versiones de toolchain fijadas en `global.json` (.NET SDK `10.0.301`) y `web/.nvmrc` (Node `24.17.0`). `dotnet` resuelve la versión del SDK automáticamente al leer `global.json` desde la raíz del repo; para Node, corre `nvm use` (o instala manualmente la versión de `.nvmrc`) antes de los pasos de `web/`.
+
+### Backend (.NET, desde la raíz del repo)
+
+Orden secuencial para compilar, correr y probar la API:
 
 ```
+dotnet restore Auto.slnx
 dotnet build Auto.slnx
-```
-
-Frontend (desde `web/`):
-
-```
-npm run build
-```
-
-## Ejecutar la API
-
-```
 dotnet run --project src/Api
-```
-
-Requiere haber corrido `dotnet restore` (implícito en `dotnet build`/`dotnet run`) al menos una vez. Versiones de toolchain fijadas en `global.json` (.NET SDK) y `web/.nvmrc` (Node).
-
-## Tests
-
-Backend (xUnit, proyecto `tests/Api.Tests`, incluido en `Auto.slnx`):
-
-```
 dotnet test Auto.slnx
 ```
 
-(por defecto compila en `Debug`; CI usa `--configuration Release` -- agrega esa flag si quieres reproducir exactamente lo que corre el pipeline)
+- `dotnet restore` -- descarga los paquetes NuGet. Implícito en `build`/`run`/`test`, pero puedes correrlo aparte para solo descargar dependencias.
+- `dotnet build Auto.slnx` -- compila los 4 proyectos (`Domain`, `Application`, `Infrastructure`, `Api`) más `tests/Api.Tests`.
+- `dotnet run --project src/Api` -- levanta la API con el perfil `http` de `launchSettings.json` en `http://localhost:5075` (o `https` en `https://localhost:7153` / `http://localhost:5075` con `dotnet run --project src/Api --launch-profile https`). Usa `ASPNETCORE_ENVIRONMENT=Development` por defecto.
+- `dotnet test Auto.slnx` -- corre xUnit (`tests/Api.Tests`). Compila en `Debug` por defecto; CI usa `--configuration Release` -- agrega esa flag si quieres reproducir exactamente lo que corre el pipeline.
 
-Frontend (Angular, `ng test` corre sobre vitest/jsdom):
+### Web (Angular, desde `web/`)
+
+Orden secuencial para instalar dependencias, compilar, correr y probar:
 
 ```
 cd web
 npm ci
+npm run build
+npm start
 npm test
 ```
+
+- `npm ci` -- instala dependencias exactas desde `package-lock.json` (usa `npm install` solo si vas a modificar dependencias).
+- `npm run build` -- compila el workspace Angular a `web/dist/` (`ng build`).
+- `npm start` -- levanta el dev server (`ng serve`) con recarga en caliente, normalmente en `http://localhost:4200`.
+- `npm test` -- corre `ng test` sobre vitest/jsdom.
+- `npm run watch` -- variante de build en modo watch (`ng build --watch --configuration development`), útil si no necesitas el dev server completo.
 
 ## CI
 

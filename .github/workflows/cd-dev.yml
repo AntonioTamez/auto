@@ -155,6 +155,7 @@ jobs:
           };
           EOF
           echo "web/src/environments/environment.ts actualizado con apiBaseUrl=https://$fqdn"
+          echo "INJECTED_API_FQDN=$fqdn" >> "$GITHUB_ENV"
 
       # --- Build de Angular + deploy a Static Web App ----------------------
       - name: Setup Node.js (from web/.nvmrc)
@@ -171,6 +172,17 @@ jobs:
       - name: npm run build
         working-directory: web
         run: npm run build
+
+      # Code review (segunda pasada, spec 1.5): sin esto, si el step de
+      # inyección del FQDN se saltara o reordenara después del build, el
+      # sitio desplegado apuntaría silenciosamente a localhost -- nada más
+      # en el pipeline lo detectaría.
+      - name: Verify FQDN injection took effect in build output
+        working-directory: web
+        run: |
+          grep -rq "$INJECTED_API_FQDN" dist/web/browser \
+            || { echo "::error::El FQDN inyectado ($INJECTED_API_FQDN) no aparece en dist/web/browser -- ¿se saltó o reordenó el step de inyección antes del build?"; exit 1; }
+          echo "apiBaseUrl=https://$INJECTED_API_FQDN confirmado en el build de producción"
 
       # navigationFallback (SPA routing) solo lo respeta Azure Static Web
       # Apps si el config vive junto al contenido desplegado, no en la raíz

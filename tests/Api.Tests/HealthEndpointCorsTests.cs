@@ -1,6 +1,16 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Logging;
+
+// `Health_AllowedOrigin_ViaDoubleUnderscoreEnvVar_ReturnsCorsHeader` y
+// `Health_EmptyCorsAllowedOrigins_LogsError` mutan/dependen del estado
+// process-wide de `Cors__AllowedOrigins__0` -- xUnit corre clases de test
+// distintas en paralelo por default, así que se desactiva la
+// paralelización a nivel de ensamblado para que ninguna otra clase de
+// `Api.Tests` que construya un `WebApplicationFactory<Program>` pueda
+// leer ese valor a medio mutar (código review, segunda pasada de spec 1.5).
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Api.Tests;
 
@@ -111,6 +121,58 @@ public class HealthEndpointCorsTests : IClassFixture<WebApplicationFactory<Progr
         finally
         {
             Environment.SetEnvironmentVariable(EnvVarName, null);
+        }
+    }
+
+    [Fact]
+    public async Task Health_EmptyCorsAllowedOrigins_LogsError()
+    {
+        // Cubre el bloque `if (corsAllowedOrigins.Length == 0)` de
+        // Program.cs -- confirma que la señal de un CORS mal inyectado
+        // llega a los logs del Container App, no solo al navegador de
+        // quien lo prueba (spec 1.5, Program.cs:30-36). Ambiente
+        // Production sin `Cors__AllowedOrigins__0`: appsettings.json base
+        // no trae sección Cors, así que la config resuelve vacía.
+        const string EnvVarName = "Cors__AllowedOrigins__0";
+        Environment.SetEnvironmentVariable(EnvVarName, null);
+
+        var logProvider = new CapturingLoggerProvider();
+
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Production");
+                builder.ConfigureLogging(logging => logging.AddProvider(logProvider));
+            });
+
+        using var client = factory.CreateClient();
+        var response = await client.GetAsync("/health");
+
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Contains(logProvider.ErrorMessages, m => m.Contains("Cors:AllowedOrigins vino vacío"));
+    }
+
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        public List<string> ErrorMessages { get; } = [];
+
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(ErrorMessages);
+
+        public void Dispose() { }
+
+        private sealed class CapturingLogger(List<string> errorMessages) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => logLevel == LogLevel.Error;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                if (logLevel == LogLevel.Error)
+                {
+                    errorMessages.Add(formatter(state, exception));
+                }
+            }
         }
     }
 }

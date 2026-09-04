@@ -202,3 +202,29 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
   summary: Los tests de Angular (`app.spec.ts`) solo simulan un fallo de red (`ProgressEvent('error')`) para el estado `'error'`, no un fallo HTTP real (ej. 500 con body) llegando al mismo callback.
   evidence: Hallazgo de code review (blind-hunter). Mismo código/callback maneja ambos casos en RxJS (`subscribe.error`), así que la cobertura funcional ya existe indirectamente -- separar el escenario es un nice-to-have de test, no una brecha de comportamiento.
+
+## Deferred from: code review of story-1-5 (2026-09-03, segunda pasada)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `/health` sigue respondiendo `200 healthy` aunque `Cors:AllowedOrigins` haya llegado vacío -- la única señal de ese fallo es un `LogError`, no el propio endpoint.
+  evidence: Hallazgo de code review (blind-hunter). Por diseño de spec 1.5 el endpoint prueba la cadena de despliegue, no la validez de CORS; el log fuerte ya cubre la alerta operativa. Revisar si en el futuro `/health` debería reflejar config inválida en su propio JSON de estado.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: El smoke check de `cd-dev.yml` (paso pre-existente de la historia 1.4, no tocado por este diff) sigue verificando la raíz del Container App y de la SWA, no `/health`, y no envía header `Origin` -- no valida el endpoint ni el wiring de CORS que esta historia agrega.
+  evidence: Hallazgo de code review (blind-hunter), verificado leyendo `.github/workflows/cd-dev.yml:208-236`. La verificación real de `/health` vía `curl` queda como paso manual en la sección Verification de este spec, no automatizada en el pipeline.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `src/Api/appsettings.json` (base) no tiene una sección `Cors` como placeholder documentado -- la única forma de descubrir la config es leyendo `appsettings.Development.json`.
+  evidence: Hallazgo de code review (blind-hunter), verificado leyendo `src/Api/appsettings.json`. Documentación/discoverability, no bloqueante.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: La suscripción HTTP del health-check en el constructor de `App` no captura `Subscription` ni usa `takeUntilDestroyed()`.
+  evidence: Hallazgo de code review (blind-hunter + edge-case-hunter). Inofensivo hoy porque `App` es el componente raíz y vive toda la vida de la app -- patrón de fuga si esta lógica se mueve a un componente que se crea/destruye repetidamente.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `liveness_probe` y `readiness_probe` de `azurerm_container_app.api` son idénticos (mismo path/puerto), sin distinguir "proceso vivo" de "listo para tráfico".
+  evidence: Hallazgo de code review (blind-hunter). Coincide con el Code Map del spec (ambos apuntan a `/health:8080` intencionalmente); relevante si una futura historia agrega una dependencia real (ej. Postgres) al chequeo de salud.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-5-endpoint-de-health-check-verificable-de-punta-a-punta.md`
+  summary: `Cors:AllowedOrigins` con un valor no vacío pero mal formado (falta el esquema, slash final) no se valida -- el chequeo actual solo cubre el caso `Length == 0`.
+  evidence: Hallazgo de code review (edge-case-hunter). Sin evidencia de que el valor real (`azurerm_static_web_app.main.default_host_name`, prefijado con `https://` en Terraform) pueda llegar mal formado hoy; edge case especulativo, hardening razonable.

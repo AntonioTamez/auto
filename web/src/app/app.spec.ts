@@ -4,6 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { App } from './app';
 import { environment } from '../environments/environment';
 
+const HEALTH_CHECK_TIMEOUT_MS = 15_000;
+
 const healthUrl = `${environment.apiBaseUrl}/health`;
 
 describe('App', () => {
@@ -63,5 +65,23 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.health')?.textContent).toContain('No se pudo conectar');
+  });
+
+  it('should show an explicit error state when the API never responds within the cold-start timeout', async () => {
+    // Sin zone.js (app zoneless) no hay fakeAsync/tick -- se usan los fake
+    // timers de vitest, que sí interceptan el asyncScheduler de RxJS detrás
+    // de timeout().
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      httpMock.expectOne(healthUrl); // deliberadamente sin flush -- simula un cold-start colgado
+      await vi.advanceTimersByTimeAsync(HEALTH_CHECK_TIMEOUT_MS + 1);
+      await fixture.whenStable();
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('.health')?.textContent).toContain('No se pudo conectar');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

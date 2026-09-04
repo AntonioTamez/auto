@@ -72,6 +72,21 @@ context:
 - Given el Container App desplegado, when Azure evalúa sus probes, then liveness y readiness apuntan a `/health:8080` y lo reportan sano.
 - Given un origen no listado en la allowlist de CORS, when llama a la API, then el navegador bloquea la respuesta (sin `AllowAnyOrigin` en el ambiente desplegado).
 
+### Review Findings
+
+_Segunda pasada de code review (2026-09-03) -- blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor._
+
+- [x] [Review][Patch] Sin test que ejerza el timeout de 15s del health-check en Angular -- borrar `.pipe(timeout(HEALTH_CHECK_TIMEOUT_MS))` no haría fallar ningún test existente [web/src/app/app.ts:38-39] -- fix: nuevo test en `app.spec.ts` con fake timers de vitest (app zoneless, sin `fakeAsync`/`tick`)
+- [x] [Review][Patch] Test de CORS por env var (`Health_AllowedOrigin_ViaDoubleUnderscoreEnvVar_ReturnsCorsHeader`) muta `Cors__AllowedOrigins__0` a nivel de proceso sin aislar la clase de colisiones con futuros tests que construyan `WebApplicationFactory<Program>` en paralelo [tests/Api.Tests/HealthEndpointCorsTests.cs:83-114] -- fix: `[assembly: CollectionBehavior(DisableTestParallelization = true)]`
+- [x] [Review][Patch] La inyección del FQDN real en `environment.ts` (step nuevo de `cd-dev.yml`) no tiene ninguna verificación post-build de que el reemplazo realmente tomó efecto -- si el step se saltara o reordenara después de `npm run build`, el sitio desplegado apuntaría a `localhost` sin que nada en el pipeline lo detecte [.github/workflows/cd-dev.yml:148-161] -- fix: nuevo step "Verify FQDN injection took effect in build output"
+- [x] [Review][Patch] Sin test que cubra la rama de log cuando `Cors:AllowedOrigins` llega vacío -- borrar el bloque `if (corsAllowedOrigins.Length == 0) { ... }` no haría fallar ningún test existente [src/Api/Program.cs:30-36] -- fix: nuevo test `Health_EmptyCorsAllowedOrigins_LogsError` con un `ILoggerProvider` de captura
+- [x] [Review][Defer] `/health` sigue respondiendo `200 healthy` aunque `Cors:AllowedOrigins` haya llegado vacío -- la única señal de ese fallo es un `LogError`, no el propio endpoint [src/Api/Program.cs:30-36, 51-55] -- deferred, pre-existing
+- [x] [Review][Defer] El smoke check de `cd-dev.yml` (paso pre-existente de la historia 1.4) sigue verificando la raíz del Container App, no `/health`, y no envía `Origin` -- no valida el endpoint ni el wiring de CORS que esta historia agrega [.github/workflows/cd-dev.yml:208-236] -- deferred, pre-existing
+- [x] [Review][Defer] `src/Api/appsettings.json` (base) no tiene una sección `Cors` como placeholder documentado -- la única forma de descubrir la config es leyendo `appsettings.Development.json` [src/Api/appsettings.json] -- deferred, pre-existing
+- [x] [Review][Defer] La suscripción HTTP del health-check en el constructor de `App` no captura `Subscription` ni usa `takeUntilDestroyed()` -- inofensivo hoy porque `App` es el componente raíz y vive toda la vida de la app, pero es un patrón de fuga si se reutiliza en un componente que se destruye [web/src/app/app.ts:38-48] -- deferred, pre-existing
+- [x] [Review][Defer] `liveness_probe` y `readiness_probe` son idénticos (mismo path/puerto), sin distinguir "proceso vivo" de "listo para tráfico" -- relevante si una futura historia agrega una dependencia real (ej. Postgres) al chequeo [infra/terraform/main.tf:269-279] -- deferred, pre-existing
+- [x] [Review][Defer] `Cors:AllowedOrigins` con un valor no vacío pero mal formado (falta el esquema, slash final) no se valida -- el chequeo actual solo cubre el caso `Length == 0` [src/Api/Program.cs:12,18] -- deferred, pre-existing
+
 ## Design Notes
 
 **Por qué CORS y no linked backend:** verificado en la documentación actual del provider `azurerm` (vía Context7) que `azurerm_static_web_app_function_app_registration` solo soporta Function Apps -- no existe un recurso nativo para enlazar un Container App como backend de una Static Web App. Lograrlo requeriría el provider `azapi` (recursos REST crudos sin validación de schema), una superficie nueva y mayor riesgo para lo que sigue siendo un scaffold. CORS es el patrón estándar, ya soportado por `azurerm`/ASP.NET Core sin dependencias nuevas.
