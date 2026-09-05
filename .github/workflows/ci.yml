@@ -40,7 +40,7 @@ jobs:
       - name: Upload OpenAPI spec artifact
         uses: actions/upload-artifact@v4
         with:
-          name: openapi-spec-${{ github.sha }}
+          name: openapi-spec-${{ github.sha }}-${{ github.run_attempt }}
           path: src/Api/obj/openapi/Api.json
           if-no-files-found: error
 
