@@ -32,6 +32,18 @@ jobs:
       - name: dotnet test
         run: dotnet test Auto.slnx --no-build --configuration Release
 
+      # Publica el contrato OpenAPI (generado build-time por Api.csproj,
+      # historia 1.7) como artefacto versionado del pipeline -- mismo
+      # esquema de versionado por commit SHA que cd-dev.yml usa para el
+      # tag de la imagen Docker. Angular (y luego Flutter) construyen
+      # contra este contrato, no contra código leído a mano.
+      - name: Upload OpenAPI spec artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec-${{ github.sha }}
+          path: src/Api/obj/openapi/Api.json
+          if-no-files-found: error
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest

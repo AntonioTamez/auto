@@ -1,7 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <!--
+    Generación build-time del contrato OpenAPI (spec 1.7): dotnet build ya
+    corre en ci.yml (historia 1.3), así que este PropertyGroup basta para
+    producir el JSON sin ningún paso nuevo de build ni de arranque de la
+    app. OpenApiDocumentsDirectory se fija bajo obj/ (NO la raíz del
+    proyecto) a propósito: el SDK Microsoft.NET.Sdk.Web incluye por
+    defecto cualquier archivo suelto en la raíz del proyecto como
+    contenido publicable, así que un JSON generado ahí se filtraría a
+    `dotnet publish` y de ahí a la imagen Docker de producción
+    (src/Api/Dockerfile), ver Spec Change Log de spec-1-7. obj/ ya está
+    fuera de esos globs y ya cubierto por la entrada `obj/` existente en
+    .gitignore.
+  -->
+  <PropertyGroup>
+    <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(BaseIntermediateOutputPath)openapi\</OpenApiDocumentsDirectory>
+  </PropertyGroup>
+
   <ItemGroup>
+    <!--
+      Pineado a la MISMA versión exacta que Microsoft.AspNetCore.OpenApi:
+      versiones distintas de estos dos paquetes chocan en runtime con un
+      FileLoadException por conflicto de Microsoft.OpenApi.dll.
+    -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.9">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

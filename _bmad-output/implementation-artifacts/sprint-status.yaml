@@ -42,7 +42,7 @@ development_status:
   1-4-cd-manual-desplegar-el-esqueleto-a-un-ambiente-de-dev: done
   1-5-endpoint-de-health-check-verificable-de-punta-a-punta: done
   1-6-destruir-el-ambiente-de-dev-bajo-demanda: done
-  1-7-publicar-el-contrato-openapi: backlog
+  1-7-publicar-el-contrato-openapi: review
   1-8-monitoreo-básico-de-disponibilidad: backlog
   epic-1-retrospective: optional
 

@@ -284,3 +284,23 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-6-destruir-el-ambiente-de-dev-bajo-demanda.md`
   summary: Sin mensaje explicativo en el log cuando el job se salta por el branch guard (`if: github.ref == 'refs/heads/main'`) al dispararse desde una rama que no es `main`.
   evidence: Hallazgo de code review (edge-case-hunter). Mismo patrón preexistente que `cd-dev.yml` (guard idéntico, mismo comportamiento de "skip" silencioso de GitHub Actions); no es una regresión de esta historia.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`
+  summary: El pin de versión exacta entre `Microsoft.AspNetCore.OpenApi` y `Microsoft.Extensions.ApiDescription.Server` (ambos `10.0.9`, para evitar un `FileLoadException` en runtime) solo está documentado vía comentario en `Api.csproj`, sin central package management (`Directory.Packages.props` no existe en el repo) que lo haga cumplir.
+  evidence: Hallazgo de code review (blind-hunter). Un futuro bump de Dependabot o una edición manual de solo uno de los dos paquetes reintroduciría el conflicto de ensamblados silenciosamente; nada en CI lo detectaría hasta que el build/test fallara en runtime.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`
+  summary: No existe documentación (README/notas de arquitectura) sobre el esquema de nombre del artifact publicado (`openapi-spec-<sha>`), su retención, ni cómo otros equipos/pipelines deben descubrirlo y consumirlo.
+  evidence: Hallazgo de code review (blind-hunter). El artifact es un entregable de contrato cruzado (Angular/Flutter lo consumirán en historias futuras); hoy solo vive como comentario en `ci.yml`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`
+  summary: El nombre de archivo generado (`Api.json`) es implícito (se deriva del nombre del proyecto/ensamblado) y no está anclado ni explicado más allá de un comentario.
+  evidence: Hallazgo de code review (blind-hunter). Renombrar el proyecto, o registrar un segundo documento OpenAPI, cambiaría el nombre de archivo generado silenciosamente y rompería tanto el `path:` hardcodeado en `ci.yml` como la ruta hardcodeada en `OpenApiSpecPublishingTests.cs`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`
+  summary: `tests/Api.Tests/Api.Tests.csproj` pinea `Microsoft.AspNetCore.Mvc.Testing` en `10.0.11` mientras `Api.csproj` pinea los paquetes de OpenAPI en `10.0.9` -- versiones de parche de ASP.NET Core inconsistentes dentro de la misma solución.
+  evidence: Hallazgo de code review (blind-hunter). Preexistente a esta historia (no la introdujo este cambio), pero surgido incidentalmente al revisar el pineo de versión que esta historia sí requiere para `Microsoft.Extensions.ApiDescription.Server`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`
+  summary: No hay un test automatizado que verifique que `Api.json` se mantiene excluido del output de `dotnet publish`/Docker -- solo un comando de verificación manual en la spec.
+  evidence: Hallazgo de code review (blind-hunter), sobre el AC agregado en la ronda de revisión anterior de esta misma historia (el bug original: el JSON se filtraba a la imagen de producción). Verificado manualmente y confirmado corregido en esta ronda, pero un futuro cambio a `OpenApiDocumentsDirectory` o a los globs de contenido del SDK podría reintroducir la fuga sin que ningún test lo detecte.
