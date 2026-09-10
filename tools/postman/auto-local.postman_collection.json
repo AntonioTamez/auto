@@ -1,0 +1,76 @@
+{
+  "info": {
+    "name": "Auto - Local (Docker / dotnet run)",
+    "description": "Verificación manual contra la API corriendo en tu máquina -- ya sea vía `docker run` (imagen real de `src/Api/Dockerfile`, puerto 8080, `ASPNETCORE_ENVIRONMENT=Production` por defecto) o vía `dotnet run --project src/Api` (perfil `http` de `launchSettings.json`, puerto 5075, `ASPNETCORE_ENVIRONMENT=Development` por defecto).\n\nAjusta la variable `baseUrl` según cuál de los dos estés usando (ver README.md, sección 'Backend vía Docker'). El endpoint `/openapi/v1.json` (historia 1.7) solo responde 200 en Development -- en el contenedor Docker (Production) responde 404 a propósito, ver `Program.cs` y `spec-1-7-publicar-el-contrato-openapi.md`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "description": "http://localhost:8080 para el contenedor Docker (docker run -p 8080:8080 ...), o http://localhost:5075 para `dotnet run --project src/Api` (perfil http)."
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Body has status and timestamp', () => {",
+              "  const json = pm.response.json();",
+              "  pm.expect(json.status).to.eql('healthy');",
+              "  pm.expect(json.timestamp).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /openapi/v1.json (solo Development)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/openapi/v1.json",
+          "host": ["{{baseUrl}}"],
+          "path": ["openapi", "v1.json"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 en Development, 404 en Production (ambos son el comportamiento correcto)', () => {",
+              "  pm.expect([200, 404]).to.include(pm.response.code);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "  pm.test('Documento OpenAPI válido con /health', () => {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.openapi).to.match(/^3\\./);",
+              "    pm.expect(json.paths).to.have.property('/health');",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

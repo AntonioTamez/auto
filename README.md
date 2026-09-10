@@ -33,6 +33,42 @@ dotnet test Auto.slnx
 - `dotnet run --project src/Api` -- levanta la API con el perfil `http` de `launchSettings.json` en `http://localhost:5075` (o `https` en `https://localhost:7153` / `http://localhost:5075` con `dotnet run --project src/Api --launch-profile https`). Usa `ASPNETCORE_ENVIRONMENT=Development` por defecto.
 - `dotnet test Auto.slnx` -- corre xUnit (`tests/Api.Tests`). Compila en `Debug` por defecto; CI usa `--configuration Release` -- agrega esa flag si quieres reproducir exactamente lo que corre el pipeline.
 
+### Backend vía Docker (imagen real, la que despliega `cd-dev.yml`)
+
+Es la misma imagen (`src/Api/Dockerfile`) que se publica a Azure Container Apps -- útil para probar el build de producción localmente sin depender de Azure.
+
+**1. Construir la imagen** (una sola vez, o cada vez que cambies código -- contexto de build = raíz del repo, no `src/Api/`):
+
+```
+docker build -f src/Api/Dockerfile -t auto-api:local .
+```
+
+**2. Levantar el contenedor:**
+
+```
+docker run -d --name auto-api-local -p 8080:8080 auto-api:local
+```
+
+**3. Probar:**
+
+```
+curl http://localhost:8080/health
+```
+
+**4. Detener y borrar cuando termines:**
+
+```
+docker rm -f auto-api-local
+```
+
+(`docker rm -f` detiene el contenedor y lo elimina en un solo paso. La imagen `auto-api:local` queda en tu Docker local para el próximo `docker run` -- solo bórrala con `docker rmi auto-api:local` si quieres liberar espacio o forzar un rebuild limpio.)
+
+**Notas:**
+- El contenedor expone el puerto `8080` (mismo `target_port` que usa Terraform en Azure Container Apps) y corre en `ASPNETCORE_ENVIRONMENT=Production` por defecto -- igual que en Azure, por lo que `/openapi/v1.json` responde `404` (gateado a `Development`) y solo `/health` está disponible.
+- El contrato OpenAPI (historia 1.7) se genera en build-time pero deliberadamente **no** queda en esta imagen -- solo se publica como artifact de CI, ver `_bmad-output/implementation-artifacts/spec-1-7-publicar-el-contrato-openapi.md`.
+
+Colección de Postman para probar contra local (Docker o `dotnet run`): `tools/postman/auto-local.postman_collection.json` -- importarla en Postman y ajustar la variable `baseUrl` (`http://localhost:8080` para Docker, `http://localhost:5075` para `dotnet run`). Para probar contra el ambiente `dev` real en Azure, ver `tools/postman/auto-dev-health-check.postman_collection.json`.
+
 ### Web (Angular, desde `web/`)
 
 Orden secuencial para instalar dependencias, compilar, correr y probar:
