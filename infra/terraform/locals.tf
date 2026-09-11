@@ -22,4 +22,27 @@ locals {
 
   # Storage account: 3-24 caracteres, solo minúsculas/números, sin guiones.
   storage_account_name = lower("st${var.project_prefix}${var.environment}${random_string.suffix.result}")
+
+  # Historia 1.8 (monitoreo básico de disponibilidad).
+  application_insights_name = "appi-${var.project_prefix}-${var.environment}"
+  action_group_name         = "ag-${var.project_prefix}-${var.environment}"
+
+  # Standard Web Tests (ping HTTP) de disponibilidad -- uno por target (API
+  # y frontend). No se usa un solo web test genérico porque cada uno cubre
+  # una URL distinta (ver spec 1.8 Code Map).
+  availability_web_test_api_name      = "webtest-api-${var.project_prefix}-${var.environment}"
+  availability_web_test_frontend_name = "webtest-frontend-${var.project_prefix}-${var.environment}"
+
+  # Dos reglas de alerta (una por Standard Web Test) en vez de una sola
+  # sobre la métrica agregada del componente -- la métrica agregada
+  # promedia ambos targets y puede enmascarar la caída total de uno solo
+  # (ver spec 1.8 Design Notes / Spec Change Log).
+  availability_alert_api_name      = "alert-availability-api-${var.project_prefix}-${var.environment}"
+  availability_alert_frontend_name = "alert-availability-frontend-${var.project_prefix}-${var.environment}"
+
+  # 2 geo_locations fijas: failed_location_count = 2 en los metric alerts
+  # exige que AMBAS reporten falla antes de notificar -- evita que un blip
+  # transitorio de una sola región dispare una alerta (ver spec 1.8 Design
+  # Notes).
+  availability_web_test_geo_locations = ["us-tx-sn1-azr", "us-il-ch1-azr"]
 }

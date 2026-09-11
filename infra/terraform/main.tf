@@ -40,6 +40,18 @@ resource "azurerm_log_analytics_workspace" "main" {
   tags                = local.common_tags
 }
 
+# Workspace-based (no clásico): apunta al Log Analytics Workspace ya
+# existente en vez de crear un segundo workspace (historia 1.8, Boundaries
+# & Constraints).
+resource "azurerm_application_insights" "main" {
+  name                = local.application_insights_name
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+  tags                = local.common_tags
+}
+
 resource "azurerm_container_app_environment" "main" {
   name                       = local.container_app_environment_name
   location                   = azurerm_resource_group.main.location
@@ -82,6 +94,15 @@ resource "azurerm_container_app" "api" {
         value = "https://${azurerm_static_web_app.main.default_host_name}"
       }
 
+      # Conecta la API a Application Insights (historia 1.8) -- mismo
+      # patrón que Cors__AllowedOrigins__0 de arriba, nunca hardcodeada.
+      # Program.cs lee esta variable vía builder.Configuration y solo
+      # registra OpenTelemetry si viene no vacía.
+      env {
+        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.main.connection_string
+      }
+
       # Cierra el gap diferido explícitamente por la historia 1.4 ("sin
       # probe... deferred a la historia 1.5"). Mismo puerto/path que el
       # endpoint /health de Program.cs.
@@ -118,6 +139,104 @@ resource "azurerm_static_web_app" "main" {
   sku_tier            = "Standard"
   sku_size            = "Standard"
   tags                = local.common_tags
+}
+
+# Standard Web Test (ping HTTP) contra /health -- mide disponibilidad real
+# de la API sin depender de que Application Insights ya esté cableado en
+# el proceso (historia 1.8, Boundaries & Constraints / Design Notes).
+resource "azurerm_application_insights_standard_web_test" "api" {
+  name                    = local.availability_web_test_api_name
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  application_insights_id = azurerm_application_insights.main.id
+  geo_locations           = local.availability_web_test_geo_locations
+  enabled                 = true
+  tags                    = local.common_tags
+
+  request {
+    url = "https://${azurerm_container_app.api.ingress[0].fqdn}/health"
+  }
+}
+
+# Standard Web Test (ping HTTP) contra la Static Web App -- mide
+# disponibilidad del frontend sin agregar ningún SDK de telemetría
+# cliente-side en Angular (historia 1.8, Boundaries & Constraints / Never).
+resource "azurerm_application_insights_standard_web_test" "frontend" {
+  name                    = local.availability_web_test_frontend_name
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  application_insights_id = azurerm_application_insights.main.id
+  geo_locations           = local.availability_web_test_geo_locations
+  enabled                 = true
+  tags                    = local.common_tags
+
+  request {
+    url = "https://${azurerm_static_web_app.main.default_host_name}"
+  }
+}
+
+# Único canal de notificación operativo del repo (Communication Services
+# existente es para OTP de usuarios, Epic 5, no para alertas -- historia
+# 1.8, Ask First).
+resource "azurerm_monitor_action_group" "main" {
+  name                = local.action_group_name
+  resource_group_name = azurerm_resource_group.main.name
+  short_name          = "availability"
+  tags                = local.common_tags
+
+  email_receiver {
+    name          = "availability-alert-email"
+    email_address = var.availability_alert_email
+  }
+}
+
+# Dos reglas de alerta (una por Standard Web Test), cada una con el bloque
+# dedicado application_insights_web_test_location_availability_criteria --
+# NO un criteria genérico sobre la métrica agregada del componente, que
+# promedia ambos targets y puede enmascarar la caída total de uno solo
+# (historia 1.8, Code Map / Design Notes / Spec Change Log).
+resource "azurerm_monitor_metric_alert" "availability_api" {
+  name                = local.availability_alert_api_name
+  resource_group_name = azurerm_resource_group.main.name
+  description         = "Notifica cuando el Standard Web Test de la API (/health) falla en las 2 ubicaciones geográficas configuradas (NFR-4, 99% uptime)."
+  scopes = [
+    azurerm_application_insights.main.id,
+    azurerm_application_insights_standard_web_test.api.id,
+  ]
+
+  application_insights_web_test_location_availability_criteria {
+    web_test_id           = azurerm_application_insights_standard_web_test.api.id
+    component_id          = azurerm_application_insights.main.id
+    failed_location_count = length(local.availability_web_test_geo_locations)
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_monitor_metric_alert" "availability_frontend" {
+  name                = local.availability_alert_frontend_name
+  resource_group_name = azurerm_resource_group.main.name
+  description         = "Notifica cuando el Standard Web Test del frontend (Static Web App) falla en las 2 ubicaciones geográficas configuradas (NFR-4, 99% uptime)."
+  scopes = [
+    azurerm_application_insights.main.id,
+    azurerm_application_insights_standard_web_test.frontend.id,
+  ]
+
+  application_insights_web_test_location_availability_criteria {
+    web_test_id           = azurerm_application_insights_standard_web_test.frontend.id
+    component_id          = azurerm_application_insights.main.id
+    failed_location_count = length(local.availability_web_test_geo_locations)
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
+  }
+
+  tags = local.common_tags
 }
 
 resource "azurerm_postgresql_flexible_server" "main" {

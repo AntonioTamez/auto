@@ -28,6 +28,14 @@
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+
+    <!--
+      Distro moderno de OpenTelemetry para Application Insights (historia
+      1.8), NO el SDK clásico Microsoft.ApplicationInsights.AspNetCore
+      (en mantenimiento). Versión 1.6.0: última estable en NuGet al
+      momento de esta historia (ver Spec Change Log de spec-1-8).
+    -->
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>

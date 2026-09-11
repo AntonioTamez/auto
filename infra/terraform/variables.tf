@@ -57,3 +57,21 @@ variable "api_container_image" {
     error_message = "api_container_image debe incluir repo y tag explícitos (formato repo:tag), ej. ghcr.io/antoniotamez/auto-api:abc1234."
   }
 }
+
+variable "availability_alert_email" {
+  description = <<-EOT
+    Email que recibe la notificación del Action Group de disponibilidad
+    (historia 1.8). `sensitive = true` para que no quede en texto plano en
+    logs de plan/apply. Trae default (destinatario resuelto vía Ask First
+    con el humano) para no requerir tocar cd-dev.yml -- no hay ningún canal
+    de notificación operativo precedente en el repo.
+  EOT
+  type        = string
+  sensitive   = true
+  default     = "antonio.tamez.s@gmail.com"
+
+  validation {
+    condition     = can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", var.availability_alert_email))
+    error_message = "availability_alert_email debe ser un email con formato válido (ej. usuario@dominio.com)."
+  }
+}
